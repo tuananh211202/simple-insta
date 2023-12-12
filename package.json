@@ -6,9 +6,12 @@
   ],
   "scripts": {
     "start:backend": "cd packages/backend && npm run start:dev",
-    "start:frontend": "cd packages/frontend && npm run dev"
+    "start:frontend": "cd packages/frontend && npm run start:dev",
+    "start:dev": "npx lerna run start:dev"
   },
-  "dependencies": {},
+  "dependencies": {
+    "@nestjs/swagger": "^7.1.16"
+  },
   "devDependencies": {
     "lerna": "^8.0.0"
   }
