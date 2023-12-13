@@ -13,17 +13,17 @@ import { AuthGuard } from './auth.guard';
     JwtModule.register({
       global: true,
       secret: jwtConstants.secret,
-      signOptions: { expiresIn: '3600s' }
-    })
+      signOptions: { expiresIn: '3600s' },
+    }),
   ],
   controllers: [AuthController],
   providers: [
     AuthService,
     {
       provide: APP_GUARD,
-      useClass: AuthGuard
-    }
+      useClass: AuthGuard,
+    },
   ],
-  exports: [AuthService]
+  exports: [AuthService],
 })
 export class AuthModule {}

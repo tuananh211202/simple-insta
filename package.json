@@ -10,7 +10,15 @@
     "start:dev": "npx lerna run start:dev"
   },
   "dependencies": {
-    "@nestjs/swagger": "^7.1.16"
+    "@nestjs/config": "^3.1.1",
+    "@nestjs/jwt": "^10.2.0",
+    "@nestjs/swagger": "^7.1.16",
+    "@nestjs/typeorm": "^10.0.1",
+    "@types/bcrypt": "^5.0.2",
+    "bcrypt": "^5.1.1",
+    "mysql2": "^3.6.5",
+    "passport-jwt": "^4.0.1",
+    "typeorm": "^0.3.17"
   },
   "devDependencies": {
     "lerna": "^8.0.0"
