@@ -3,14 +3,35 @@ import { SignUpContainer } from "./style";
 import CustomedInput from "../../components/Input";
 import { validateEmail } from "../../utils/validator/email-validator";
 import { validate8Character } from "../../utils/validator/password-validator";
+import { useState } from "react";
+import { AuthApi } from "../../midleware/api";
+import { useMutation, useQueryClient } from "react-query";
+import Cookies from 'js-cookie';
 
 const { Text } = Typography;
 
 const SignUp = () => {
   const [form] = Form.useForm();
+  const queryClient = useQueryClient();
 
-  const onFinish = () => {
-    console.log(form.getFieldsValue());
+  const [errorMessage, setErrorMessage] = useState<string>();
+
+  const mutateSignup = useMutation(AuthApi.signUp, {
+    onSuccess: (data) => {
+      Cookies.set('accessToken', data.access_token);
+      Cookies.set('user', JSON.stringify(data.newUser));
+      queryClient.invalidateQueries('user');
+    },
+    onError: (error) => {
+      if(error.response.status === 409){
+        setErrorMessage('This email has been registered!');
+      }
+    }
+  });
+
+  const onFinish = async () => {
+    const { confirmpassword, ...signupData  } = form.getFieldsValue();
+    mutateSignup.mutate(signupData);
   }
 
   return (
@@ -68,6 +89,12 @@ const SignUp = () => {
         
         <div className="textContainer">
           <Text>Welcome</Text>
+          {
+            errorMessage &&
+            <div className="errorContainer">
+              <Text>{errorMessage}</Text>
+            </div>
+          }
         </div>
 
         <div className="navigateContainer">

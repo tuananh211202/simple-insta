@@ -32,11 +32,27 @@ export const SignInContainer = styled.div`
     position: absolute;
     width: 100%;
     top: 20px;
-    display: flex;
-    justify-content: center;
     & span {
+      width: 100%;
       font-size: 50px;
       font-weight: 600;
+      display: flex;
+      justify-content: center;
+    }
+    .errorContainer {
+      margin-top: 30px;
+      height: 60px;
+      width: 100%;
+      background-color: #999;
+      display: flex;
+      align-items: center;
+      border-radius: 10px;
+      & span {
+        display: flex;
+        justify-content: center;
+        font-size: 20px;
+        color: #fff;
+      }
     }
   }
 

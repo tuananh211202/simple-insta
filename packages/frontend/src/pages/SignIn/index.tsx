@@ -3,14 +3,35 @@ import { SignInContainer } from "./style";
 import CustomedInput from "../../components/Input";
 import { validateEmail } from "../../utils/validator/email-validator";
 import { validate8Character } from "../../utils/validator/password-validator";
+import { useMutation, useQueryClient } from "react-query";
+import { AuthApi } from "../../midleware/api";
+import { useState } from "react";
+import Cookies from 'js-cookie';
 
 const { Text } = Typography;
 
 const SignIn = () => {
   const [form] = Form.useForm();
+  const queryClient = useQueryClient();
+
+  const [errorMessage, setErrorMessage] = useState<string>();
+
+  const mutateLogin = useMutation(AuthApi.signIn, {
+    onSuccess: (data) => {
+      Cookies.set('accessToken', data.access_token);
+      Cookies.set('user', JSON.stringify(data.user));
+      queryClient.invalidateQueries('user');
+    },
+    onError: (error) => {
+      if(error.response.status === 401){
+        setErrorMessage('Wrong email or password!');
+      }
+    }
+  });
 
   const onFinish = () => {
-    console.log(form.getFieldsValue());
+    const loginData = form.getFieldsValue();
+    mutateLogin.mutate(loginData);
   }
 
   return (
@@ -45,6 +66,12 @@ const SignIn = () => {
         
         <div className="textContainer">
           <Text>Welcome</Text>
+          {
+            errorMessage &&
+            <div className="errorContainer">
+              <Text>{errorMessage}</Text>
+            </div>
+          }
         </div>
 
         <div className="navigateContainer">
