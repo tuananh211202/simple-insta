@@ -52,7 +52,11 @@ interface AuthProviderProps {
 }
 
 export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
-  const [state, dispatch] = useReducer(authReducer, initialState);
+  const accessToken = Cookies.get('accessToken');
+  const [state, dispatch] = useReducer(authReducer, {
+    ...initialState,
+    isLogin: accessToken ? true : false
+  });
 
   return (
     <AuthContext.Provider value={{ state, dispatch }}>

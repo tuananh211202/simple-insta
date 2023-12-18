@@ -2,7 +2,6 @@ import { Menu, MenuProps } from "antd";
 import React, { useState } from "react";
 import { MenuUnfoldOutlined, MenuFoldOutlined, HomeOutlined, SearchOutlined, MessageOutlined, HeartOutlined, PlusSquareOutlined, ProfileOutlined, LogoutOutlined } from "@ant-design/icons";
 import { SideBarContainer } from "./style";
-import Cookies from "js-cookie";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../context/auth-context";
 
@@ -26,7 +25,7 @@ const getItem = (
 
 const SideBar = () => {
   const [collapsed, setCollapsed] = useState<boolean>(false);
-  const [selectedKey, setSelectedKey] = useState('1');
+  const [selectedKey, setSelectedKey] = useState('home');
   const navigate = useNavigate();
   const { dispatch: authDispatch } = useAuth();
 

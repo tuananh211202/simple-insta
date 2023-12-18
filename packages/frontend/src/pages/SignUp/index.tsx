@@ -7,12 +7,14 @@ import { useState } from "react";
 import { AuthApi } from "../../midleware/api";
 import { useMutation } from "react-query";
 import { useAuth } from "../../context/auth-context";
+import { useNavigate } from "react-router-dom";
 
 const { Text } = Typography;
 
 const SignUp = () => {
   const [form] = Form.useForm();
   const { dispatch: authDispatch } = useAuth();
+  const navigate = useNavigate();
 
   const [errorMessage, setErrorMessage] = useState<string>();
 
@@ -24,7 +26,8 @@ const SignUp = () => {
           access_token: data.access_token,
           user: data.user
         }
-      })
+      });
+      navigate('/home');
     },
     onError: (error) => {
       if(error.response.status === 409){
