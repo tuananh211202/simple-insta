@@ -5,22 +5,26 @@ import { validateEmail } from "../../utils/validator/email-validator";
 import { validate8Character } from "../../utils/validator/password-validator";
 import { useState } from "react";
 import { AuthApi } from "../../midleware/api";
-import { useMutation, useQueryClient } from "react-query";
-import Cookies from 'js-cookie';
+import { useMutation } from "react-query";
+import { useAuth } from "../../context/auth-context";
 
 const { Text } = Typography;
 
 const SignUp = () => {
   const [form] = Form.useForm();
-  const queryClient = useQueryClient();
+  const { dispatch: authDispatch } = useAuth();
 
   const [errorMessage, setErrorMessage] = useState<string>();
 
   const mutateSignup = useMutation(AuthApi.signUp, {
     onSuccess: (data) => {
-      Cookies.set('accessToken', data.access_token);
-      Cookies.set('user', JSON.stringify(data.newUser));
-      queryClient.invalidateQueries('user');
+      authDispatch({
+        type: 'LOGIN',
+        payload: {
+          access_token: data.access_token,
+          user: data.user
+        }
+      })
     },
     onError: (error) => {
       if(error.response.status === 409){

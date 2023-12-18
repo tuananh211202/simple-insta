@@ -39,9 +39,7 @@ export class FriendRequestService {
     const user = await this.userService.findOne(userId);
     const other = await this.userService.findOne(otherId);
 
-    if(!user || !other){
-      throw new ConflictException();
-    }
+    if(!user || !other) return;
 
     const relation = await this.getRelation(userId, otherId);
     if(relation === Relation.friend || relation === Relation.sender) return ;

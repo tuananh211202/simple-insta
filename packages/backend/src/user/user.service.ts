@@ -14,6 +14,12 @@ export class UserService {
     return this.userRepo.findOneBy({ userId: id });
   }
 
+  async getUserById(id: number) {
+    const user = await this.findOne(id);
+    delete user.password;
+    return user;
+  }
+
   async findOneByEmail(email: string) {
     return this.userRepo.findOneBy({ email });
   }
