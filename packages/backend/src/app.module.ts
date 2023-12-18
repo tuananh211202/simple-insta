@@ -4,6 +4,8 @@ import { UserModule } from './user/user.module';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { ConfigModule } from '@nestjs/config';
 import { User } from './user/user.entity';
+import { FriendRequestModule } from './friend-request/friend-request.module';
+import { FriendRequest } from './friend-request/friend-request.entity';
 
 @Module({
   imports: [
@@ -15,11 +17,12 @@ import { User } from './user/user.entity';
       username: process.env.DATABASE_USERNAME,
       password: process.env.DATABASE_PASSWORD,
       database: process.env.DATABASE_NAME,
-      entities: [User],
+      entities: [User, FriendRequest],
       synchronize: true,
     }),
     AuthModule,
     UserModule,
+    FriendRequestModule,
   ],
 })
 export class AppModule {}

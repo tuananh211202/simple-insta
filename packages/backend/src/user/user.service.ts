@@ -10,6 +10,10 @@ export type ExampleUser = any;
 export class UserService {
   constructor(@InjectRepository(User) private userRepo: Repository<User>) {}
 
+  async findOne(id: number) {
+    return this.userRepo.findOneBy({ userId: id });
+  }
+
   async findOneByEmail(email: string) {
     return this.userRepo.findOneBy({ email });
   }
