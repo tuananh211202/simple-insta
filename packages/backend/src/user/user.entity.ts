@@ -21,9 +21,9 @@ export class User {
   @Column()
   avatar: string;
 
-  @OneToMany(() => FriendRequest, friendRequest => friendRequest.sender)
+  @OneToMany(() => FriendRequest, (friendRequest) => friendRequest.sender)
   sentFriendRequests: FriendRequest[];
 
-  @OneToMany(() => FriendRequest, friendRequest => friendRequest.receiver)
+  @OneToMany(() => FriendRequest, (friendRequest) => friendRequest.receiver)
   receivedFriendRequests: FriendRequest[];
 }

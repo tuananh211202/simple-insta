@@ -25,7 +25,7 @@ const Page404 = () => {
       title='404'
       subTitle="Sorry, the page you visited does not exist."
       extra={<Button type="primary" onClick={() => navigate(path)}>Back {text}</Button>}
-      style={{ width: '100%' }}
+      style={{ width: '100%', height: '100vh', marginTop: '100px'}}
     />
   );
 };

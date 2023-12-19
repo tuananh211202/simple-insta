@@ -4,3 +4,7 @@ body {
   font-family: 'Poppins';
   margin: 0;
 }
+
+.ant-drawer-body {
+  padding: 0 !important;
+}

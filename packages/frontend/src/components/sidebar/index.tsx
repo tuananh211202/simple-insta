@@ -1,9 +1,10 @@
 import { Menu, MenuProps } from "antd";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { MenuUnfoldOutlined, MenuFoldOutlined, HomeOutlined, SearchOutlined, MessageOutlined, HeartOutlined, PlusSquareOutlined, ProfileOutlined, LogoutOutlined } from "@ant-design/icons";
 import { SideBarContainer } from "./style";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "../../context/auth-context";
+import PageDrawner from "../drawner";
 
 type MenuItem = Required<MenuProps>['items'][number];
 
@@ -25,9 +26,11 @@ const getItem = (
 
 const SideBar = () => {
   const [collapsed, setCollapsed] = useState<boolean>(false);
-  const [selectedKey, setSelectedKey] = useState('home');
+  const [selectedKey, setSelectedKey] = useState('');
+  const [isDrawnerOpen, setIsDrawnerOpen] = useState(false);
   const navigate = useNavigate();
   const { dispatch: authDispatch } = useAuth();
+  const location = useLocation();
 
   const items: MenuItem[] = [
     getItem('Collapse', 'collapse', collapsed ? <MenuUnfoldOutlined /> : <MenuFoldOutlined />),
@@ -47,13 +50,15 @@ const SideBar = () => {
         setSelectedKey(selectedKey);
         return;
       case 'home':
-      case 'messages':
       case 'profile':
         setSelectedKey(keys.key); 
         navigate(keys.key);
         return;
       case 'search':
       case 'notifications':
+      case 'messages':
+        setSelectedKey(keys.key);
+        setIsDrawnerOpen(true);
         return;
       case 'create':
         return;
@@ -63,8 +68,17 @@ const SideBar = () => {
         return;
       default:
         break;
-    };
+    }
   }
+
+  const onDrawnerClose = () => {
+    setIsDrawnerOpen(false);
+    setSelectedKey(location.pathname.split('/')[1]);
+  }
+
+  useEffect(() => {
+    setSelectedKey(location.pathname.split('/')[1]);
+  }, [location.pathname]);
 
   return (
     <SideBarContainer>
@@ -74,7 +88,9 @@ const SideBar = () => {
         onClick={onClick}
         mode="inline"
         selectedKeys={[ selectedKey ]}
+        theme="dark"
       />
+      <PageDrawner isOpen={isDrawnerOpen} onClose={onDrawnerClose} drawnerType={selectedKey} />
     </SideBarContainer>
   )
 }
