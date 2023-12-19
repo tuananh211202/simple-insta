@@ -1,6 +1,8 @@
-import { Controller, Delete, Get, Param, Post, Request } from '@nestjs/common';
+import { Controller, Get, Param, Post, Request } from '@nestjs/common';
 import { FriendRequestService } from './friend-request.service';
+import { ApiTags } from '@nestjs/swagger';
 
+@ApiTags('Friend Request')
 @Controller('friend-request')
 export class FriendRequestController {
   constructor(private friendRequestService: FriendRequestService) {}
