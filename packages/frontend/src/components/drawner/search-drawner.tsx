@@ -6,6 +6,7 @@ import { useMutation } from "react-query";
 import { getListUser } from "../../midleware/api/user";
 import { useNavigate } from "react-router-dom";
 import { UserOutlined } from "@ant-design/icons";
+import InfiniteScroll from 'react-infinite-scroll-component';
 
 type UserData = {
   avatar: string;
@@ -97,7 +98,7 @@ const SearchDrawner = (props: DrawnerProps) => {
         />
       </div>
       <div className="listUser">
-        {listUser.map((userInfo: UserData) => (
+        {/* {listUser.map((userInfo: UserData) => (
           <Button type="text" key={userInfo.userId} onClick={() => handleClick(userInfo.userId)}>
             <Row>
               <Col>
@@ -109,7 +110,7 @@ const SearchDrawner = (props: DrawnerProps) => {
               </Col>
             </Row>
           </Button>
-        ))}
+        ))} */} 
       </div>
     </StyledDrawner>
   )

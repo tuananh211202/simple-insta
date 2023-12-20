@@ -4,6 +4,7 @@ import { User } from './user.entity';
 import { Repository } from 'typeorm';
 import { UserDto } from './dto/user.dto';
 import { FilterDto } from './dto/filter.dto';
+import { PaginationOptions } from 'src/utils/constants';
 
 export type ExampleUser = any;
 
@@ -29,22 +30,31 @@ export class UserService {
     return this.userRepo.save(user);
   }
 
-  async getUsers(filter: FilterDto) {
+  async getUsers(filter: FilterDto, pagOpts: PaginationOptions) {
     const { name, id } = filter;
-    if (id.length === 0) {
+
+    const { page, pageSize } = pagOpts;
+    const skip = (page - 1) * pageSize;
+    const take = pageSize;
+
+    if (id.length === 0 && name.length !== 0) {
       const users = await this.userRepo
         .createQueryBuilder('user')
         .select(['user.userId', 'user.name', 'user.email', 'user.avatar'])
         .where('user.name LIKE :query', { query: `%${name}%` })
+        .skip(skip)
+        .take(take)
         .getMany();
 
       return users;
     }
-    if (name.length === 0) {
+    if (id.length !== 0 && name.length === 0) {
       const users = await this.userRepo
         .createQueryBuilder('user')
         .select(['user.userId', 'user.name', 'user.email', 'user.avatar'])
         .where('CAST(user.userId AS CHAR) LIKE :query', { query: `%${id}%` })
+        .skip(skip)
+        .take(take)
         .getMany();
 
       return users;

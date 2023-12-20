@@ -1,7 +1,6 @@
-import { Body, Controller, Get, Param, Post } from '@nestjs/common';
+import { Controller, Get, Param, Query } from '@nestjs/common';
 import { UserService } from './user.service';
 import { Public } from 'src/auth/constants';
-import { FilterDto } from './dto/filter.dto';
 import { ApiTags } from '@nestjs/swagger';
 
 @ApiTags('User')
@@ -16,8 +15,13 @@ export class UserController {
   }
 
   @Public()
-  @Post('list')
-  getUserByFilter(@Body() filterDto: FilterDto) {
-    return this.userService.getUsers(filterDto);
+  @Get('list')
+  getUserByFilter(
+    @Query('page') page: number = 1,
+    @Query('pageSize') pageSize: number = 10,
+    @Query('id') id: string = '',
+    @Query('name') name: string = '',
+  ) {
+    return this.userService.getUsers({ id, name }, { page, pageSize });
   }
 }
