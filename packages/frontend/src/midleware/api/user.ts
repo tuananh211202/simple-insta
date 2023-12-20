@@ -1,12 +1,8 @@
 import axios from "axios";
-import { BASE_URL } from "./constants";
+import { BASE_URL, PaginationOptions } from "./constants";
 
-type FilterOptions = {
-  id: string;
-  name: string;
-}
-
-export const getListUser = async (filter: FilterOptions) => {
-  const response = await axios.post(`${BASE_URL}/user/list`, filter);
+export const getListUser = async (name: string, pagOpts: PaginationOptions) => {
+  const query = `page=${pagOpts.page}&pageSize=${pagOpts.pageSize}&name=${name}`;
+  const response = await axios.get(`${BASE_URL}/user/list?${query}`);
   return response.data;
 }

@@ -31,13 +31,15 @@ export class UserService {
   }
 
   async getUsers(filter: FilterDto, pagOpts: PaginationOptions) {
-    const { name, id } = filter;
+    const { name } = filter;
+
+    if(!name) return [];
 
     const { page, pageSize } = pagOpts;
     const skip = (page - 1) * pageSize;
     const take = pageSize;
 
-    if (id.length === 0 && name.length !== 0) {
+    if (name.length !== 0) {
       const users = await this.userRepo
         .createQueryBuilder('user')
         .select(['user.userId', 'user.name', 'user.email', 'user.avatar'])
@@ -48,17 +50,7 @@ export class UserService {
 
       return users;
     }
-    if (id.length !== 0 && name.length === 0) {
-      const users = await this.userRepo
-        .createQueryBuilder('user')
-        .select(['user.userId', 'user.name', 'user.email', 'user.avatar'])
-        .where('CAST(user.userId AS CHAR) LIKE :query', { query: `%${id}%` })
-        .skip(skip)
-        .take(take)
-        .getMany();
-
-      return users;
-    }
+    
     return [];
   }
 }
