@@ -40,17 +40,17 @@ export class UserService {
     const take = pageSize;
 
     if (name.length !== 0) {
-      const users = await this.userRepo
+      const [users, totalItems] = await this.userRepo
         .createQueryBuilder('user')
         .select(['user.userId', 'user.name', 'user.email', 'user.avatar'])
         .where('user.name LIKE :query', { query: `%${name}%` })
         .skip(skip)
         .take(take)
-        .getMany();
+        .getManyAndCount();
 
-      return users;
+      return {users, total: totalItems};
     }
     
-    return [];
+    return {users: [], total: 0};
   }
 }

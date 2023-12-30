@@ -1,23 +1,20 @@
-import { Avatar, Button, Col, Divider, Drawer, Input, Row, Select } from "antd"
+import { Avatar, Divider, Drawer, Input, List, Skeleton } from "antd"
 import { DrawnerProps } from "."
 import styled from "styled-components";
 import { useState } from "react";
 import { useMutation } from "react-query";
 import { getListUser } from "../../midleware/api/user";
-import { useNavigate } from "react-router-dom";
-import { UserOutlined } from "@ant-design/icons";
 import InfiniteScroll from 'react-infinite-scroll-component';
 
 type UserData = {
-  avatar: string;
-  email: string;
-  name: string;
   userId: number;
-}
+  name: string;
+  email: string;
+  description: string;
+  avatar: string;
+};
 
 const StyledDrawner = styled(Drawer)`
-  /* background-color: #000 !important;
-  color: #fff; */
   padding: 0px 10px;
   font-family: Poppins;
   .header {
@@ -31,55 +28,46 @@ const StyledDrawner = styled(Drawer)`
   .ant-divider {
     padding: 0;
     margin: 0;
-    /* background-color: #fff; */
   }
   .search-box {
     width: 100%;
-    margin: 20px 0px 10px 0px;
+    margin: 20px 0px;
   }
-  .listUser {
-    button {
-      width: 100%;
-      margin: 10px 0px;
-      height: fit-content;
-      padding: 10px 30px;
-    }
+  .ant-list-item-meta-avatar {
+    height: 100%;
   }
 `;
 
 const SearchDrawner = (props: DrawnerProps) => {
   const { isOpen, onClose } = props;
-  const [type, setType] = useState('name');
+  const [searchValue, setSearchValue] = useState<string>();
+  const [page, setPage] = useState(1);
   const [listUser, setListUser] = useState<UserData[]>([]);
-  const navigate = useNavigate();
-
-  const handleChange = (value: string) => {
-    setType(value);
-  }
-
-  const handleSearch = (value: string) => {
-    const filter = {
-      id: type === 'id' ? value : '',
-      name: type === 'name' ? value : ''
-    };
-    getListUserMutation.mutate(filter);
-  }
+  const [total, setTotal] = useState(0);
 
   const getListUserMutation = useMutation(getListUser, {
     onSuccess: (data) => {
-      setListUser(data);
+      setTotal(data.total);
+      setListUser([
+        ...listUser,
+        ...data.users
+      ]);
     }
-  })
+  });
 
-  const selectBefore = (
-    <Select defaultValue="name" onChange={handleChange} style={{ width: 80 }}>
-      <Select.Option value="name">Name</Select.Option>
-      <Select.Option value="id">ID</Select.Option>
-    </Select>
-  );
+  const handleSearch = (value: string) => {
+    setSearchValue(value);
+    setPage(1);
+    getListUserMutation.mutate({ name: value, page: 1, pageSize: 10 });
+  }
 
-  const handleClick = (id: number) => {
-    navigate(`/profile/${id}`);
+  const handleGetMore = () => {
+    getListUserMutation.mutate({ name: searchValue ?? '', page: page + 1, pageSize: 10 });
+    setPage(page + 1);
+  }
+
+  const profileUserLink = (userId: number) => {
+    return '/profile/'+userId;
   }
 
   return (
@@ -91,29 +79,43 @@ const SearchDrawner = (props: DrawnerProps) => {
       <div className="header">Search</div>
       <Divider />
       <div className="search-box">
-        <Input.Search 
-          addonBefore={selectBefore} 
-          placeholder={`Input ${type}`}
-          onSearch={handleSearch}
-        />
-      </div>
-      <div className="listUser">
-        {/* {listUser.map((userInfo: UserData) => (
-          <Button type="text" key={userInfo.userId} onClick={() => handleClick(userInfo.userId)}>
-            <Row>
-              <Col>
-                <Avatar size={64} icon={<UserOutlined />} src={userInfo.avatar.length ? userInfo.avatar : null} />
-              </Col>
-              <Col flex="auto" style={{ padding: "10px" }}>
-                <Row style={{ height: "50%", alignItems: "center" }}>{userInfo.name}<b>#{userInfo.userId}</b></Row>
-                <Row style={{ height: "50%", alignItems: "center" }}><i>{userInfo.email}</i></Row>
-              </Col>
-            </Row>
-          </Button>
-        ))} */} 
+        <Input.Search placeholder="Input name" onSearch={handleSearch} />
+        <div
+          id="scrollableDiv"
+          style={{
+            height: 'calc(100vh - 150px)',
+            overflow: 'auto',
+            padding: '0 16px',
+            margin: '20px 0 0 0'
+          }}
+        >
+          <InfiniteScroll
+            dataLength={listUser.length}
+            next={handleGetMore}
+            hasMore={listUser.length < total}
+            loader={<Skeleton avatar paragraph={{ rows: 1 }} active />}
+            endMessage={<Divider plain>It is all, nothing more 🤐</Divider>}
+            scrollableTarget="scrollableDiv"
+          >
+             <List
+              dataSource={listUser}
+              renderItem={(item) => (
+                <List.Item key={item.email}>
+                  <List.Item.Meta
+                    avatar={<Avatar src={item.avatar} size={48} />}
+                    title={<a href={profileUserLink(item.userId)}>{item.name}#{item.userId}</a>}
+                    description={item.email}
+                  />
+                </List.Item>
+              )}
+            />
+          </InfiniteScroll>
+        </div>
       </div>
     </StyledDrawner>
   )
 }
+
+// TODO: remove current user list before search
 
 export default SearchDrawner;
