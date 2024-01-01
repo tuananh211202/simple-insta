@@ -46,12 +46,15 @@ const SearchDrawner = (props: DrawnerProps) => {
   const [total, setTotal] = useState(0);
 
   const getListUserMutation = useMutation(getListUser, {
-    onSuccess: (data) => {
+    onSuccess: (data, variables) => {
       setTotal(data.total);
-      setListUser([
-        ...listUser,
-        ...data.users
-      ]);
+      if(variables.page === 1) setListUser([...data.users]);
+      else {
+        setListUser([
+          ...listUser,
+          ...data.users
+        ]);
+      }
     }
   });
 

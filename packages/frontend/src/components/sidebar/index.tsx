@@ -5,6 +5,7 @@ import { SideBarContainer } from "./style";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "../../context/auth-context";
 import PageDrawner from "../drawner";
+import Cookies from 'js-cookie';
 
 type MenuItem = Required<MenuProps>['items'][number];
 
@@ -29,8 +30,9 @@ const SideBar = () => {
   const [selectedKey, setSelectedKey] = useState('');
   const [isDrawnerOpen, setIsDrawnerOpen] = useState(false);
   const navigate = useNavigate();
-  const { dispatch: authDispatch } = useAuth();
+  const { state, dispatch: authDispatch } = useAuth();
   const location = useLocation();
+  const currentUser = JSON.parse(Cookies.get('user') ?? '');
 
   const items: MenuItem[] = [
     getItem('Collapse', 'collapse', collapsed ? <MenuUnfoldOutlined /> : <MenuFoldOutlined />),
@@ -52,7 +54,7 @@ const SideBar = () => {
       case 'home':
       case 'profile':
         setSelectedKey(keys.key); 
-        navigate(keys.key);
+        navigate(`/profile/${currentUser.userId}`);
         return;
       case 'search':
       case 'notifications':
