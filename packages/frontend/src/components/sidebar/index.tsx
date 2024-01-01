@@ -52,6 +52,9 @@ const SideBar = () => {
         setSelectedKey(selectedKey);
         return;
       case 'home':
+        setSelectedKey(keys.key); 
+        navigate('/home');
+        return;
       case 'profile':
         setSelectedKey(keys.key); 
         navigate(`/profile/${currentUser.userId}`);

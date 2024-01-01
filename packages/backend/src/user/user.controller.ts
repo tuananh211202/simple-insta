@@ -1,7 +1,8 @@
-import { Controller, Get, Param, ParseIntPipe, Query } from '@nestjs/common';
+import { Body, Controller, Get, Param, ParseIntPipe, Post, Query, Request } from '@nestjs/common';
 import { UserService } from './user.service';
 import { Public } from 'src/auth/constants';
 import { ApiTags } from '@nestjs/swagger';
+import { UserDto } from './dto/user.dto';
 
 @ApiTags('User')
 @Controller('user')
@@ -22,5 +23,10 @@ export class UserController {
     @Query('name') name: string | undefined,
   ) {
     return this.userService.getUsers({ name }, { page, pageSize });
+  }
+
+  @Post()
+  updateUser(@Request() req, @Body() userData: UserDto) {
+    return this.userService.updateUser({userId: req.user.sub, ...userData});
   }
 }
