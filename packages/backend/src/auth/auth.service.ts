@@ -34,7 +34,6 @@ export class AuthService {
 
   async signUp(signupDto: SignupDto) {
     const { name, email, password, description } = signupDto;
-    console.log(signupDto);
     const existUser = await this.userService.findOneByEmail(email);
     if (existUser) {
       throw new ConflictException();

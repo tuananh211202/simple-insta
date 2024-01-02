@@ -2,11 +2,22 @@ import { useLocation } from "react-router-dom";
 import { numberValidator } from "../../utils/validator/number-validator";
 import Page404 from "../404";
 import styled from "styled-components";
-import { UserApi } from "../../midleware/api"; 
+import { FriendRequestApi, UserApi } from "../../midleware/api"; 
 import { useMutation, useQuery } from "react-query";
-import { Avatar, Button, Col, Form, Input, Row } from "antd";
-import { EditOutlined, SaveOutlined, UserOutlined, StopOutlined } from "@ant-design/icons";
+import { Avatar, Button, Col, Form, Input, Row, message } from "antd";
+import { EditOutlined, SaveOutlined, UserOutlined, StopOutlined, PlusOutlined, MinusOutlined, CheckOutlined, CloseOutlined } from "@ant-design/icons";
 import { useEffect, useState } from "react";
+import Cookies from "js-cookie";
+import LoadingPage from "../LoadingPage";
+import { socket } from "../../routes/user-routes";
+
+// eslint-disable-next-line react-refresh/only-export-components
+export enum Relation {
+  none = 'None',
+  friend = 'Friend',
+  sender = 'Sender',
+  receiver = 'Receiver',
+}
 
 const PageContainer = styled.div`
   width: 100%;
@@ -84,25 +95,56 @@ const ProfilePage = () => {
   const userId = numberValidator(location.pathname.slice(9));
   const [onEdit, setOnEdit] = useState(false);
   const [form] = Form.useForm();
+  const currentUser = JSON.parse(Cookies.get('user') ?? '');
 
-  const { data: userData, refetch } = useQuery(['userData', userId], () => UserApi.getUserById(userId));
+  const { data: userData, refetch, isLoading } = useQuery(['userData', userId], () => UserApi.getUserById(userId));
+
+  const { data: friendRequest, refetch: relationRefetch } = useQuery(['relation', userId], () => FriendRequestApi.getRelation(userId));
 
   const updateDataMutation = useMutation(UserApi.updateUser, {
     onSuccess: () => {
       refetch();
     }
-  })
+  });
 
   const onSave = () => {
     updateDataMutation.mutate(form.getFieldsValue());
+    message.success('Update profile successfully!');
     setOnEdit(false);
+  }
+
+  const handleSendRequest = () => {
+    socket.emit('sendUserId', userId);
+    relationRefetch();
   }
 
   useEffect(() => {
     if(onEdit) form.setFieldsValue(userData);
-  }, [onEdit]);
+  }, [form, onEdit, userData]);
+
+  useEffect(() => {
+    socket.on('receiveUserId', (receivedId) => {
+      console.log('Received Id from server:', receivedId);
+    });
+
+    return () => {
+      socket.off('receiveUserId');
+    };
+  }, []);
   
+  if(isLoading) return <LoadingPage />;
+
   if(!userData?.userId) return <Page404 />;
+
+  console.log(friendRequest);
+
+  const getRelationIcon = () => {
+    if(friendRequest === Relation.none) return <PlusOutlined />;
+    if(friendRequest === Relation.friend) return <MinusOutlined />;
+    if(friendRequest === Relation.receiver) return <CheckOutlined />;
+    if(friendRequest === Relation.sender) return <CloseOutlined />;
+    return <></>;
+  }
 
   return (
     <PageContainer>
@@ -139,12 +181,14 @@ const ProfilePage = () => {
                 </Form.Item>
                 <div className="formController">
                   {
+                    currentUser.userId === userId ?
                     onEdit ? ( 
                       <>
                         <Button icon={<StopOutlined />} style={{ marginRight: '6px' }} onClick={() => setOnEdit(false)} />
                         <Button icon={<SaveOutlined />} onClick={onSave} />
                       </>
                     ) : <Button icon={<EditOutlined />} onClick={() => setOnEdit(true)} />
+                    : <Button icon={getRelationIcon()} onClick={handleSendRequest} />
                   }
                 </div>
               </Form>

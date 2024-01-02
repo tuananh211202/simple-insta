@@ -8,30 +8,37 @@ export enum Relation {
   none = 'None',
   friend = 'Friend',
   sender = 'Sender',
-  receiver = 'Receiver'
-};
+  receiver = 'Receiver',
+}
 
 @Injectable()
 export class FriendRequestService {
   constructor(
-    @InjectRepository(FriendRequest) private requestRepo: Repository<FriendRequest>,
-    private userService: UserService
+    @InjectRepository(FriendRequest)
+    private requestRepo: Repository<FriendRequest>,
+    private userService: UserService,
   ) {}
 
   async getRelation(userId: number, otherId: number) {
     const user = await this.userService.findOne(userId);
     const other = await this.userService.findOne(otherId);
 
-    if(!user || !other){
+    if (!user || !other) {
       throw new ConflictException();
     }
 
-    const from = await this.requestRepo.findOneBy({ sender: user, receiver: other });
-    const to = await this.requestRepo.findOneBy({ sender: other, receiver: user });
+    const from = await this.requestRepo.findOneBy({
+      sender: user,
+      receiver: other,
+    });
+    const to = await this.requestRepo.findOneBy({
+      sender: other,
+      receiver: user,
+    });
 
-    if(!from && to) return Relation.receiver;
-    if(from && !to) return Relation.sender;
-    if(from && to) return Relation.friend;
+    if (!from && to) return Relation.receiver;
+    if (from && !to) return Relation.sender;
+    if (from && to) return Relation.friend;
     return Relation.none;
   }
 
@@ -39,31 +46,37 @@ export class FriendRequestService {
     const user = await this.userService.findOne(userId);
     const other = await this.userService.findOne(otherId);
 
-    if(!user || !other) return;
+    if (!user || !other) return;
 
     const relation = await this.getRelation(userId, otherId);
-    if(relation === Relation.friend || relation === Relation.sender) return ;
+    if (relation === Relation.friend || relation === Relation.sender) return;
     await this.requestRepo.save({
       sender: user,
-      receiver: other
+      receiver: other,
     });
-    return ;
+    return;
   }
 
   async deleteFriendRequest(userId: number, otherId: number) {
     const user = await this.userService.findOne(userId);
     const other = await this.userService.findOne(otherId);
 
-    if(!user || !other){
+    if (!user || !other) {
       throw new ConflictException();
     }
 
-    const from = await this.requestRepo.findOneBy({ sender: user, receiver: other });
-    const to = await this.requestRepo.findOneBy({ sender: other, receiver: user });
+    const from = await this.requestRepo.findOneBy({
+      sender: user,
+      receiver: other,
+    });
+    const to = await this.requestRepo.findOneBy({
+      sender: other,
+      receiver: user,
+    });
 
-    if(from) await this.requestRepo.delete(from);
-    if(to) await this.requestRepo.delete(to);
+    if (from) await this.requestRepo.delete(from);
+    if (to) await this.requestRepo.delete(to);
 
-    return ;
+    return;
   }
 }

@@ -6,6 +6,7 @@ import { ConfigModule } from '@nestjs/config';
 import { User } from './user/user.entity';
 import { FriendRequestModule } from './friend-request/friend-request.module';
 import { FriendRequest } from './friend-request/friend-request.entity';
+import { NotiModule } from './noti/noti.module';
 
 @Module({
   imports: [
@@ -23,6 +24,7 @@ import { FriendRequest } from './friend-request/friend-request.entity';
     AuthModule,
     UserModule,
     FriendRequestModule,
+    NotiModule,
   ],
 })
 export class AppModule {}
