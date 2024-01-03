@@ -1,5 +1,6 @@
 import { User } from 'src/user/user.entity';
 import {
+  Column,
   CreateDateColumn,
   Entity,
   ManyToOne,
@@ -7,16 +8,16 @@ import {
 } from 'typeorm';
 
 @Entity()
-export class FriendRequest {
+export class Noti {
   @PrimaryGeneratedColumn()
-  friendRequestId: number;
+  notiId: number;
 
   @CreateDateColumn({ type: 'timestamp' })
   create_at: Date;
 
-  @ManyToOne(() => User, (user) => user.sentFriendRequests)
-  sender: User;
+  @Column()
+  content: string;
 
-  @ManyToOne(() => User, (user) => user.receivedFriendRequests)
-  receiver: User;
+  @ManyToOne(() => User, (user) => user.noti)
+  user: User;
 }

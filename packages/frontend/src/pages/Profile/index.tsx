@@ -136,8 +136,6 @@ const ProfilePage = () => {
 
   if(!userData?.userId) return <Page404 />;
 
-  console.log(friendRequest);
-
   const getRelationIcon = () => {
     if(friendRequest === Relation.none) return <PlusOutlined />;
     if(friendRequest === Relation.friend) return <MinusOutlined />;

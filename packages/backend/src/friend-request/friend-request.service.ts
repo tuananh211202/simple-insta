@@ -65,17 +65,15 @@ export class FriendRequestService {
       throw new ConflictException();
     }
 
-    const from = await this.requestRepo.findOneBy({
+    const request = await this.requestRepo.findOneBy({
       sender: user,
       receiver: other,
     });
-    const to = await this.requestRepo.findOneBy({
-      sender: other,
-      receiver: user,
-    });
 
-    if (from) await this.requestRepo.delete(from);
-    if (to) await this.requestRepo.delete(to);
+    if (request)
+      return this.requestRepo.delete({
+        friendRequestId: request.friendRequestId,
+      });
 
     return;
   }

@@ -9,6 +9,7 @@ import { UserModule } from 'src/user/user.module';
 @Module({
   imports: [TypeOrmModule.forFeature([FriendRequest, User]), UserModule],
   controllers: [FriendRequestController],
-  providers: [FriendRequestService]
+  providers: [FriendRequestService],
+  exports: [FriendRequestService],
 })
 export class FriendRequestModule {}

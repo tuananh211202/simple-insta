@@ -4,6 +4,7 @@ import {
   WebSocketServer,
 } from '@nestjs/websockets';
 import { Server } from 'socket.io';
+import { NotiService } from './noti.service';
 
 @WebSocketGateway({
   cors: {
@@ -12,6 +13,8 @@ import { Server } from 'socket.io';
   },
 })
 export class NotiGateway {
+  constructor(private notiService: NotiService) {}
+
   @WebSocketServer() server: Server;
 
   private clientsInfo: { userId: number; clientId: string }[] = [];
@@ -40,18 +43,20 @@ export class NotiGateway {
   }
 
   @SubscribeMessage('sendUserId')
-  handleSendNotification(client: any, userId: number): void {
-    // Gửi noti ve client.id để cap nhat tinh trang
+  async handleSendNotification(client: any, userId: number) {
     const receiverClient = this.clientsInfo.find(
       (record) => record.userId === userId,
     );
-    const sendUserId = this.clientsInfo.find(
+    const sendUser = this.clientsInfo.find(
       (record) => record.clientId === client.id,
     );
+
+    await this.notiService.createRequest(sendUser.userId, userId);
+
     if (receiverClient) {
       this.server
         .to(receiverClient.clientId)
-        .emit('receiveUserId', sendUserId.userId);
-    } else console.log(`Client ${userId} is not connect`);
+        .emit('receiveUserId', sendUser.userId);
+    }
   }
 }

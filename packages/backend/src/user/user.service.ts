@@ -18,7 +18,7 @@ export class UserService {
 
   async getUserById(id: number) {
     const user = await this.findOne(id);
-    if(!user) return {};
+    if (!user) return {};
     delete user.password;
     return user;
   }

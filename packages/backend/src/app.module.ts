@@ -7,6 +7,7 @@ import { User } from './user/user.entity';
 import { FriendRequestModule } from './friend-request/friend-request.module';
 import { FriendRequest } from './friend-request/friend-request.entity';
 import { NotiModule } from './noti/noti.module';
+import { Noti } from './noti/noti.entity';
 
 @Module({
   imports: [
@@ -18,7 +19,7 @@ import { NotiModule } from './noti/noti.module';
       username: process.env.DATABASE_USERNAME,
       password: process.env.DATABASE_PASSWORD,
       database: process.env.DATABASE_NAME,
-      entities: [User, FriendRequest],
+      entities: [User, FriendRequest, Noti],
       synchronize: true,
     }),
     AuthModule,
