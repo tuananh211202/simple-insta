@@ -1,4 +1,13 @@
-import { Body, Controller, Get, Param, ParseIntPipe, Post, Query, Request } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  Param,
+  ParseIntPipe,
+  Post,
+  Query,
+  Request,
+} from '@nestjs/common';
 import { UserService } from './user.service';
 import { Public } from 'src/auth/constants';
 import { ApiTags } from '@nestjs/swagger';
@@ -27,6 +36,6 @@ export class UserController {
 
   @Post()
   updateUser(@Request() req, @Body() userData: UserDto) {
-    return this.userService.updateUser({userId: req.user.sub, ...userData});
+    return this.userService.updateUser({ userId: req.user.sub, ...userData });
   }
 }

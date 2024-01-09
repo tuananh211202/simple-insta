@@ -1,11 +1,14 @@
 import { Menu, MenuProps } from "antd";
 import React, { useEffect, useState } from "react";
-import { MenuUnfoldOutlined, MenuFoldOutlined, HomeOutlined, SearchOutlined, MessageOutlined, HeartOutlined, PlusSquareOutlined, ProfileOutlined, LogoutOutlined } from "@ant-design/icons";
+import { MenuUnfoldOutlined, MenuFoldOutlined, HomeOutlined, SearchOutlined, MessageOutlined, HeartOutlined, PlusSquareOutlined, ProfileOutlined, LogoutOutlined, HeartFilled } from "@ant-design/icons";
 import { SideBarContainer } from "./style";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "../../context/auth-context";
 import PageDrawner from "../drawner";
 import Cookies from 'js-cookie';
+import { socket } from "../../routes/user-routes";
+import { useMutation, useQuery } from "react-query";
+import { NotiApi } from "../../midleware/api";
 
 type MenuItem = Required<MenuProps>['items'][number];
 
@@ -33,13 +36,30 @@ const SideBar = () => {
   const { state, dispatch: authDispatch } = useAuth();
   const location = useLocation();
   const currentUser = JSON.parse(Cookies.get('user') ?? '');
+  const [hasNoti, setHasNoti] = useState(false);
+
+  const { data: unread } = useQuery(
+   ['hasUnreadNoti', hasNoti],
+   NotiApi.getUnreadNoti,
+   { 
+    onSuccess: (data) => {
+      setHasNoti(data);
+    }
+   }
+  );
+
+  const readNotiMutation = useMutation(NotiApi.readNoti, {
+    onSuccess: () => {
+      setHasNoti(false);
+    }
+  })
 
   const items: MenuItem[] = [
     getItem('Collapse', 'collapse', collapsed ? <MenuUnfoldOutlined /> : <MenuFoldOutlined />),
     getItem('Home', 'home', <HomeOutlined />),
     getItem('Search', 'search', <SearchOutlined />),
     getItem('Messages', 'messages', <MessageOutlined />),
-    getItem('Notifications', 'notifications', <HeartOutlined />),
+    getItem('Notifications', 'notifications', hasNoti ? <HeartFilled /> : <HeartOutlined />),
     getItem('Create', 'create', <PlusSquareOutlined />),
     getItem('Profile', 'profile', <ProfileOutlined />),
     getItem('Logout', 'logout', <LogoutOutlined />)
@@ -60,7 +80,14 @@ const SideBar = () => {
         navigate(`/profile/${currentUser.userId}`);
         return;
       case 'search':
+        setSelectedKey(keys.key);
+        setIsDrawnerOpen(true);
+        return;
       case 'notifications':
+        readNotiMutation.mutate();
+        setSelectedKey(keys.key);
+        setIsDrawnerOpen(true);
+        return;
       case 'messages':
         setSelectedKey(keys.key);
         setIsDrawnerOpen(true);
@@ -84,6 +111,18 @@ const SideBar = () => {
   useEffect(() => {
     setSelectedKey(location.pathname.split('/')[1]);
   }, [location.pathname]);
+
+  useEffect(() => {
+    socket.on('receiveUserId', (receivedId) => {
+      setHasNoti(true);
+    });
+
+    return () => {
+      socket.off('receiveUserId');
+    };
+  }, []);
+
+  console.log(unread);
 
   return (
     <SideBarContainer>

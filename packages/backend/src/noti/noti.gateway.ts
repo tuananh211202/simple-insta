@@ -51,9 +51,12 @@ export class NotiGateway {
       (record) => record.clientId === client.id,
     );
 
-    await this.notiService.createRequest(sendUser.userId, userId);
+    const request = await this.notiService.createRequest(
+      sendUser.userId,
+      userId,
+    );
 
-    if (receiverClient) {
+    if (receiverClient && request.message === 'Send') {
       this.server
         .to(receiverClient.clientId)
         .emit('receiveUserId', sendUser.userId);

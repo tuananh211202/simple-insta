@@ -8,6 +8,7 @@ import {
   FriendRequestService,
   Relation,
 } from 'src/friend-request/friend-request.service';
+import { PaginationOptions } from 'src/utils/constants';
 
 enum NotiType {
   send = 'has sent you a friend request',
@@ -21,6 +22,48 @@ export class NotiService {
     private userService: UserService,
     private friendRequestService: FriendRequestService,
   ) {}
+
+  async getAllNoti(userId: number, pagOpts: PaginationOptions) {
+    const { page, pageSize } = pagOpts;
+    const skip = (page - 1) * pageSize;
+    const take = pageSize;
+
+    const user = await this.userService.findOne(userId);
+    if (!user) {
+      throw new NotFoundException();
+    }
+    const [notis, totalItems] = await this.notiRepo
+      .createQueryBuilder('noti')
+      .leftJoin('noti.user', 'user')
+      .where('noti.user.userId = :userId', { userId })
+      .addSelect('user.userId')
+      .skip(skip)
+      .take(take)
+      .getManyAndCount();
+
+    return { notis, total: totalItems };
+  }
+
+  async hasNoti(userId: number) {
+    const user = await this.userService.findOne(userId);
+    if (!user) {
+      throw new NotFoundException();
+    }
+    const unreadNoti = await this.notiRepo.findBy({
+      user,
+      isRead: false,
+    });
+    if (unreadNoti.length) return true;
+    return false;
+  }
+
+  async readNoti(userId: number) {
+    const user = await this.userService.findOne(userId);
+    if (!user) {
+      throw new NotFoundException();
+    }
+    return this.notiRepo.update({ user }, { isRead: true });
+  }
 
   async createNoti(notiData: NotiDto) {
     const user = await this.userService.findOne(notiData.userId);
@@ -42,27 +85,29 @@ export class NotiService {
     );
     if (relation === Relation.none) {
       await this.friendRequestService.createFriendRequest(senderId, receiverId);
-      return this.createNoti({
+      await this.createNoti({
         content: `${sender.name} ${sender.userId} ` + NotiType.send,
         userId: receiver.userId,
       });
+      return { message: 'Send' };
     }
     if (relation === Relation.receiver) {
       await this.friendRequestService.createFriendRequest(senderId, receiverId);
-      return this.createNoti({
+      await this.createNoti({
         content: `${sender.name} ${sender.userId} ` + NotiType.receive,
         userId: receiver.userId,
       });
+      return { message: 'Send' };
     }
     if (relation === Relation.sender) {
       await this.friendRequestService.deleteFriendRequest(senderId, receiverId);
-      return;
+      return { message: 'Do nothing' };
     }
     if (relation === Relation.friend) {
       await this.friendRequestService.deleteFriendRequest(senderId, receiverId);
       await this.friendRequestService.deleteFriendRequest(receiverId, senderId);
-      return;
+      return { message: 'Do nothing' };
     }
-    return;
+    return { message: 'Do nothing' };
   }
 }

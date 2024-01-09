@@ -18,6 +18,9 @@ export class Noti {
   @Column()
   content: string;
 
+  @Column({ default: false })
+  isRead: boolean;
+
   @ManyToOne(() => User, (user) => user.noti)
   user: User;
 }

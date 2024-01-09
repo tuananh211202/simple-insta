@@ -33,11 +33,11 @@ export class UserService {
 
   async updateUser(userData: UserDto) {
     const user = await this.userRepo.findOneBy({ userId: userData.userId });
-    if(!user) {
+    if (!user) {
       throw new NotFoundException();
     }
 
-    const savedUser = {...user, ...userData};
+    const savedUser = { ...user, ...userData };
     await this.userRepo.save(savedUser);
 
     return;
@@ -46,7 +46,7 @@ export class UserService {
   async getUsers(filter: FilterDto, pagOpts: PaginationOptions) {
     const { name } = filter;
 
-    if(!name) return [];
+    if (!name) return [];
 
     const { page, pageSize } = pagOpts;
     const skip = (page - 1) * pageSize;
@@ -61,9 +61,9 @@ export class UserService {
         .take(take)
         .getManyAndCount();
 
-      return {users, total: totalItems};
+      return { users, total: totalItems };
     }
-    
-    return {users: [], total: 0};
+
+    return { users: [], total: 0 };
   }
 }
