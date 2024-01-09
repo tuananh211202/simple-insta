@@ -8,6 +8,8 @@ import { FriendRequestModule } from './friend-request/friend-request.module';
 import { FriendRequest } from './friend-request/friend-request.entity';
 import { NotiModule } from './noti/noti.module';
 import { Noti } from './noti/noti.entity';
+import { MessageModule } from './message/message.module';
+import { Message } from './message/message.entity';
 
 @Module({
   imports: [
@@ -19,13 +21,14 @@ import { Noti } from './noti/noti.entity';
       username: process.env.DATABASE_USERNAME,
       password: process.env.DATABASE_PASSWORD,
       database: process.env.DATABASE_NAME,
-      entities: [User, FriendRequest, Noti],
+      entities: [User, FriendRequest, Noti, Message],
       synchronize: true,
     }),
     AuthModule,
     UserModule,
     FriendRequestModule,
     NotiModule,
+    MessageModule,
   ],
 })
 export class AppModule {}

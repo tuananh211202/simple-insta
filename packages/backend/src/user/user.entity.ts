@@ -1,4 +1,5 @@
 import { FriendRequest } from 'src/friend-request/friend-request.entity';
+import { Message } from 'src/message/message.entity';
 import { Noti } from 'src/noti/noti.entity';
 import { Column, Entity, OneToMany, PrimaryGeneratedColumn } from 'typeorm';
 
@@ -30,4 +31,10 @@ export class User {
 
   @OneToMany(() => Noti, (noti) => noti.user)
   noti: Noti[];
+
+  @OneToMany(() => Message, (message) => message.sender)
+  messageSender: Message[];
+
+  @OneToMany(() => Message, (message) => message.receiver)
+  messageReceiver: Message[];
 }
