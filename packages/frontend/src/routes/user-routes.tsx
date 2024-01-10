@@ -19,7 +19,8 @@ const UserRoutes = () => {
   const currentUser = JSON.parse(Cookies.get('user') ?? '');
 
   useEffect(() => {
-    socket.emit('connectServer', currentUser.userId);
+    if(currentUser.userId)
+      socket.emit('connectServer', currentUser.userId);
   },[currentUser.userId]);
 
   useEffect(() => {

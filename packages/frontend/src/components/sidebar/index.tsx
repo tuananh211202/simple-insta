@@ -122,8 +122,6 @@ const SideBar = () => {
     };
   }, []);
 
-  console.log(unread);
-
   return (
     <SideBarContainer>
       <Menu

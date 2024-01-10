@@ -15,29 +15,32 @@ export class MessageService {
   async createMessage(userId: number, toId: number, message: string) {
     const fromUser = await this.userService.findOne(userId);
     const toUser = await this.userService.findOne(toId);
-    if(!fromUser || !toUser) {
+    if (!fromUser || !toUser) {
       throw new NotFoundException();
     }
 
     return this.messageRepo.save({
       sender: fromUser,
       receiver: toUser,
-      message
+      message,
+      create_at: new Date(),
     });
   }
 
   async getChat(userId: number, toId: number) {
     const fromUser = await this.userService.findOne(userId);
     const toUser = await this.userService.findOne(toId);
-    if(!fromUser || !toUser) {
+    if (!fromUser || !toUser) {
       throw new NotFoundException();
     }
 
     return this.messageRepo.find({
+      relations: ['sender'],
       where: [
         { sender: fromUser, receiver: toUser },
         { sender: toUser, receiver: fromUser },
-      ]
-    })
+      ],
+      select: ['sender'],
+    });
   }
 }

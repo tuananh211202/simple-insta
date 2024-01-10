@@ -11,7 +11,15 @@ export class MessageController {
   }
 
   @Post(':id')
-  async createMessage(@Request() req, @Param('id') userId, @Body() messDto: { message: string }) {
-    return this.messageService.createMessage(req.user.sub, userId, messDto.message);
+  async createMessage(
+    @Request() req,
+    @Param('id') userId,
+    @Body() messDto: { message: string },
+  ) {
+    return this.messageService.createMessage(
+      req.user.sub,
+      userId,
+      messDto.message,
+    );
   }
 }

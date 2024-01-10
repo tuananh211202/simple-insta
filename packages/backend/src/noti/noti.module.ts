@@ -6,9 +6,15 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { Noti } from './noti.entity';
 import { UserModule } from 'src/user/user.module';
 import { FriendRequestModule } from 'src/friend-request/friend-request.module';
+import { MessageModule } from 'src/message/message.module';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([Noti]), UserModule, FriendRequestModule],
+  imports: [
+    TypeOrmModule.forFeature([Noti]),
+    UserModule,
+    FriendRequestModule,
+    MessageModule,
+  ],
   controllers: [NotiController],
   providers: [NotiService, NotiGateway],
   exports: [NotiService],

@@ -5,6 +5,7 @@ import {
 } from '@nestjs/websockets';
 import { Server } from 'socket.io';
 import { NotiService } from './noti.service';
+import { MessageService } from 'src/message/message.service';
 
 @WebSocketGateway({
   cors: {
@@ -13,7 +14,10 @@ import { NotiService } from './noti.service';
   },
 })
 export class NotiGateway {
-  constructor(private notiService: NotiService) {}
+  constructor(
+    private notiService: NotiService,
+    private messageService: MessageService,
+  ) {}
 
   @WebSocketServer() server: Server;
 
@@ -48,6 +52,31 @@ export class NotiGateway {
       'listOnline',
       this.clientsInfo.map((client) => client.userId),
     );
+  }
+
+  @SubscribeMessage('sendMessage')
+  async handleSendMessage(
+    client: any,
+    payload: { userId: number; message: string },
+  ) {
+    const receiverClient = this.clientsInfo.find(
+      (record) => record.userId === payload.userId,
+    );
+    const sendUser = this.clientsInfo.find(
+      (record) => record.clientId === client.id,
+    );
+
+    await this.messageService.createMessage(
+      sendUser.userId,
+      payload.userId,
+      payload.message,
+    );
+
+    if (receiverClient)
+      this.server.to(receiverClient.clientId).emit('receiveMessage', {
+        userId: receiverClient.userId,
+        message: payload.message,
+      });
   }
 
   @SubscribeMessage('sendUserId')

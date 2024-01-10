@@ -64,7 +64,6 @@ const NotificationsDrawner = (props: DrawnerProps) => {
           ...data.notis
         ]);
       }
-      console.log(data);
     }
   });
 
