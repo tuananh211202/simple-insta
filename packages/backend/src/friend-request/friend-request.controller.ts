@@ -7,7 +7,7 @@ import { ApiTags } from '@nestjs/swagger';
 export class FriendRequestController {
   constructor(private friendRequestService: FriendRequestService) {}
 
-  @Get(':id')
+  @Get('relation/:id')
   getRelation(@Request() req, @Param('id') userId: number) {
     return this.friendRequestService.getRelation(req.user.sub, userId);
   }
@@ -20,5 +20,10 @@ export class FriendRequestController {
   @Post('remove/:id')
   deleteFriendRequest(@Request() req, @Param('id') userId: number) {
     return this.friendRequestService.deleteFriendRequest(req.user.sub, userId);
+  }
+
+  @Get('list-friend')
+  getlistFriend(@Request() req) {
+    return this.friendRequestService.getListFriend(req.user.sub);
   }
 }

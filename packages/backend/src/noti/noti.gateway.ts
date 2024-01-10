@@ -42,6 +42,14 @@ export class NotiGateway {
       .emit('connectStatus', { message: 'Connect successfully' });
   }
 
+  @SubscribeMessage('getOnline')
+  handleGetOnline(client: any): void {
+    this.server.to(client.id).emit(
+      'listOnline',
+      this.clientsInfo.map((client) => client.userId),
+    );
+  }
+
   @SubscribeMessage('sendUserId')
   async handleSendNotification(client: any, userId: number) {
     const receiverClient = this.clientsInfo.find(

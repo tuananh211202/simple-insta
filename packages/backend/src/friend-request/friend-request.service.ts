@@ -1,4 +1,4 @@
-import { ConflictException, Injectable } from '@nestjs/common';
+import { ConflictException, Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { FriendRequest } from './friend-request.entity';
 import { Repository } from 'typeorm';
@@ -76,5 +76,49 @@ export class FriendRequestService {
       });
 
     return;
+  }
+
+  async getListFriend(userId: number) {
+    const user = await this.userService.findOne(userId);
+
+    if (!user) {
+      throw new NotFoundException();
+    }
+
+    const sentRequests = await this.requestRepo.find({
+      relations: ['receiver'],
+      select: ['receiver'],
+      where: {
+        sender: user,
+      },
+    });
+
+    const receivedRequests = await this.requestRepo.find({
+      relations: ['sender'],
+      select: ['sender'],
+      where: {
+        receiver: user,
+      },
+    });
+
+    const listFriend = sentRequests.reduce((result, sentRequest) => {
+      if (
+        receivedRequests.findIndex(
+          (receivedRequest) =>
+            receivedRequest.sender.userId === sentRequest.receiver.userId,
+        ) !== -1
+      )
+        return [
+          ...result,
+          {
+            userId: sentRequest.receiver.userId,
+            name: sentRequest.receiver.name,
+            avatar: sentRequest.receiver.avatar,
+          },
+        ];
+      return result;
+    }, []);
+
+    return listFriend;
   }
 }
