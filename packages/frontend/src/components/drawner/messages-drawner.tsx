@@ -4,13 +4,21 @@ import styled from "styled-components";
 import { MessageOutlined, SendOutlined, UserOutlined } from "@ant-design/icons";
 import { useEffect, useRef, useState } from "react";
 import { useQuery } from "react-query";
-import { FriendRequestApi } from "../../midleware/api";
+import { FriendRequestApi, MessageApi } from "../../midleware/api";
 import { socket } from "../../routes/user-routes";
+import Cookies from "js-cookie";
 
 type UserData = {
   name: string;
   userId: number;
   avatar: string;
+}
+
+type Message = {
+  messageId: number;
+  message: string;
+  create_at: string;
+  sender: { userId: number; };
 }
 
 const StyledDrawner = styled(Drawer)`
@@ -55,8 +63,11 @@ const MessagesDrawner = (props: DrawnerProps) => {
   const [actives, setActives] = useState<number[]>();
   const  [chatUser, setChatUser] = useState<UserData>();
   const [inputValue, setInputValue] = useState('');
-
+  const currentUser = JSON.parse(Cookies.get('user') ?? '');
+  const scrollableDivRef = useRef<HTMLDivElement>(null);
+  
   const { data: listFriend } = useQuery(['getListFriend'], FriendRequestApi.getListFriend);
+  const { data: chat, refetch } = useQuery(['getChat', chatUser?.userId], () => MessageApi.getChat(chatUser?.userId ?? 0));
 
   const handleClick = (user: UserData) => {
     setChatUser(user);
@@ -77,10 +88,21 @@ const MessagesDrawner = (props: DrawnerProps) => {
       setActives(data);
     })
 
+    socket.on('receiveMessage', () => {
+      refetch();
+    })
+
     return () => {
       socket.off('listOnline');
+      socket.off('receiveMessage');
     };
   },[]);
+
+  useEffect(() => {
+    if (scrollableDivRef.current) {
+      scrollableDivRef.current.scrollTop = scrollableDivRef.current.scrollHeight;
+    }
+  }, [chat]);
 
   return (
     <StyledDrawner 
@@ -114,8 +136,33 @@ const MessagesDrawner = (props: DrawnerProps) => {
         }
         {choosen === "messages" &&
           <>
-            <div style={{ width: '100%', height: 'calc(100% - 56px)', backgroundColor: 'black' }}>
-              aaa
+            <div style={{ width: 'calc(100% - 32px)', height: 'calc(100% - 56px)', padding: '0px 16px', overflow: 'auto' }} ref={scrollableDivRef}>
+              {(chat ?? []).map((message: Message) => (
+                  <div 
+                    style={{ 
+                      display: 'flex', 
+                      justifyContent: message.sender.userId === currentUser.userId ? 'end' : 'start', width: '100%',
+                    }}
+                    key={message.messageId}
+                  >
+                    <div 
+                      style={{ 
+                        width: 'fit-content', 
+                        padding: '8px 16px', 
+                        margin: '4px 0px',
+                        borderRadius: '16px',
+                        backgroundColor: message.sender.userId === currentUser.userId ? "#2c84ff" : "#f0f0f0",
+                        color: message.sender.userId === currentUser.userId ? '#fff' : '#000',
+                        fontSize: '16px',
+                        maxWidth: '275px',
+                        wordWrap: 'break-word',
+                      }}
+                    >
+                      {message.message}
+                    </div>
+                  </div>
+                ))
+              }
             </div>
             <div style={{ width: 'calc(100% - 32px)', position: 'absolute', bottom: 0, padding: '16px 16px 0px 16px', display: 'flex', alignItems: 'center' }}>
               <Input size="large" style={{ paddingRight: '40px' }} value={inputValue} onChange={(e) => setInputValue(e.target.value)} onPressEnter={handleSendMessage} />

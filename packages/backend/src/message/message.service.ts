@@ -34,13 +34,25 @@ export class MessageService {
       throw new NotFoundException();
     }
 
-    return this.messageRepo.find({
+    const chat = await this.messageRepo.find({
       relations: ['sender'],
       where: [
         { sender: fromUser, receiver: toUser },
         { sender: toUser, receiver: fromUser },
       ],
       select: ['sender'],
+      order: {
+        create_at: 'ASC',
+      },
+    });
+
+    return chat.map((item) => {
+      return {
+        ...item,
+        sender: {
+          userId: item.sender.userId,
+        },
+      };
     });
   }
 }

@@ -72,10 +72,13 @@ export class NotiGateway {
       payload.message,
     );
 
+    this.server.to(client.id).emit('receiveMessage', {
+      message: 'You send new messages!',
+    });
+
     if (receiverClient)
       this.server.to(receiverClient.clientId).emit('receiveMessage', {
-        userId: receiverClient.userId,
-        message: payload.message,
+        message: 'You have new messages!',
       });
   }
 

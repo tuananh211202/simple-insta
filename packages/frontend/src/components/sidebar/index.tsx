@@ -1,6 +1,6 @@
 import { Menu, MenuProps } from "antd";
 import React, { useEffect, useState } from "react";
-import { MenuUnfoldOutlined, MenuFoldOutlined, HomeOutlined, SearchOutlined, MessageOutlined, HeartOutlined, PlusSquareOutlined, ProfileOutlined, LogoutOutlined, HeartFilled } from "@ant-design/icons";
+import { MenuUnfoldOutlined, MenuFoldOutlined, HomeOutlined, SearchOutlined, MessageOutlined, HeartOutlined, PlusSquareOutlined, ProfileOutlined, LogoutOutlined, HeartFilled, MessageFilled } from "@ant-design/icons";
 import { SideBarContainer } from "./style";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "../../context/auth-context";
@@ -37,6 +37,7 @@ const SideBar = () => {
   const location = useLocation();
   const currentUser = JSON.parse(Cookies.get('user') ?? '');
   const [hasNoti, setHasNoti] = useState(false);
+  const [hasMessage, setHasMessage] = useState(false);
 
   const { data: unread } = useQuery(
    ['hasUnreadNoti', hasNoti],
@@ -58,7 +59,7 @@ const SideBar = () => {
     getItem('Collapse', 'collapse', collapsed ? <MenuUnfoldOutlined /> : <MenuFoldOutlined />),
     getItem('Home', 'home', <HomeOutlined />),
     getItem('Search', 'search', <SearchOutlined />),
-    getItem('Messages', 'messages', <MessageOutlined />),
+    getItem('Messages', 'messages', hasMessage ? <MessageFilled /> : <MessageOutlined />),
     getItem('Notifications', 'notifications', hasNoti ? <HeartFilled /> : <HeartOutlined />),
     getItem('Create', 'create', <PlusSquareOutlined />),
     getItem('Profile', 'profile', <ProfileOutlined />),
@@ -89,6 +90,7 @@ const SideBar = () => {
         setIsDrawnerOpen(true);
         return;
       case 'messages':
+        setHasMessage(false);
         setSelectedKey(keys.key);
         setIsDrawnerOpen(true);
         return;
@@ -117,8 +119,15 @@ const SideBar = () => {
       setHasNoti(true);
     });
 
+    socket.on('receiveMessage', (data) => {
+      if(data.message === 'You have new messages!') {
+        setHasMessage(true);
+      }
+    })
+
     return () => {
       socket.off('receiveUserId');
+      socket.off('receiveMessage');
     };
   }, []);
 
