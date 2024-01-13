@@ -10,6 +10,7 @@ import { NotiModule } from './noti/noti.module';
 import { Noti } from './noti/noti.entity';
 import { MessageModule } from './message/message.module';
 import { Message } from './message/message.entity';
+import { ImageModule } from './image/image.module';
 
 @Module({
   imports: [
@@ -29,6 +30,7 @@ import { Message } from './message/message.entity';
     FriendRequestModule,
     NotiModule,
     MessageModule,
+    ImageModule,
   ],
 })
 export class AppModule {}
