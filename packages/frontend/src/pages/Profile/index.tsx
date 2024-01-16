@@ -2,14 +2,15 @@ import { useLocation } from "react-router-dom";
 import { numberValidator } from "../../utils/validator/number-validator";
 import Page404 from "../404";
 import styled from "styled-components";
-import { FriendRequestApi, UserApi } from "../../midleware/api"; 
+import { FriendRequestApi, ImageApi, UserApi } from "../../midleware/api"; 
 import { useMutation, useQuery } from "react-query";
-import { Avatar, Button, Col, Form, Input, Row, message } from "antd";
+import { Avatar, Button, Col, Form, Input, Modal, Row, message } from "antd";
 import { EditOutlined, SaveOutlined, UserOutlined, StopOutlined, PlusOutlined, MinusOutlined, CheckOutlined, CloseOutlined } from "@ant-design/icons";
 import { useEffect, useState } from "react";
 import Cookies from "js-cookie";
 import LoadingPage from "../LoadingPage";
 import { socket } from "../../routes/user-routes";
+import { BASE_URL } from "../../midleware/api/constants";
 
 // eslint-disable-next-line react-refresh/only-export-components
 export enum Relation {
@@ -69,6 +70,7 @@ const PageContainer = styled.div`
       span {
         border-radius: 6px 0px 0px 6px;
       }
+      position: relative;
     }
     .formContainer {
       height: 100%;
@@ -96,10 +98,26 @@ const ProfilePage = () => {
   const [onEdit, setOnEdit] = useState(false);
   const [form] = Form.useForm();
   const currentUser = JSON.parse(Cookies.get('user') ?? '');
+  const [isOpen, setIsOpen] = useState(false);
+  const [file, setfile] = useState<any>();
+
+  const onChange = (file: any) => {
+    const { files } = file.target;
+    if (files && files.length !== 0) {
+      setfile(files[0]);
+    }
+  };
 
   const { data: userData, refetch, isLoading } = useQuery(['userData', userId], () => UserApi.getUserById(userId));
 
   const { data: friendRequest, refetch: relationRefetch } = useQuery(['relation', userId], () => FriendRequestApi.getRelation(userId));
+
+  const uploadImageMutation = useMutation(ImageApi.uploadImage, {
+    onSuccess: (data) => {
+      console.log(data);
+      updateDataMutation.mutate({avatar: data.path});
+    }
+  });
 
   const updateDataMutation = useMutation(UserApi.updateUser, {
     onSuccess: () => {
@@ -116,6 +134,13 @@ const ProfilePage = () => {
   const handleSendRequest = () => {
     socket.emit('sendUserId', userId);
     relationRefetch();
+  }
+
+  const handleOk = () => {
+    const formData = new FormData();
+    formData.append('image', file);
+    uploadImageMutation.mutate(formData);
+    setIsOpen(false);
   }
 
   useEffect(() => {
@@ -149,7 +174,7 @@ const ProfilePage = () => {
       <div className="header">
         <Row className="container">
           <Col>
-            <Avatar icon={<UserOutlined />} size={48} src={!userData.avatar.lenght ? undefined : userData.avatar} />
+            <Avatar icon={<UserOutlined />} size={48} src={!userData.avatar.length ? undefined : `${BASE_URL}/image/${userData.avatar}`} />
           </Col>
           <Col flex="auto" className="info">
             <Row>{userData.name}</Row>
@@ -161,7 +186,8 @@ const ProfilePage = () => {
         <Col span={17}>
           <Row className="infoBox">
             <Col className="avatarContainer">
-              <Avatar shape="square" size={200} icon={<UserOutlined />} src={!userData.avatar.lenght ? undefined : userData.avatar} />
+              <Avatar shape="square" size={200} icon={<UserOutlined />} src={!userData.avatar.length ? undefined : `${BASE_URL}/image/${userData.avatar}`} />
+              {currentUser.userId === userId && <Button icon={<EditOutlined />} style={{ position: 'absolute', bottom: 6, right: 6, backgroundColor: 'transparent', borderColor: 'transparent' }} onClick={() => setIsOpen(true)} />}
             </Col>
             <Col flex="auto" className="formContainer">
               <Form className="form" form={form}>
@@ -195,6 +221,14 @@ const ProfilePage = () => {
         </Col>
         <Col span={6} offset={1}>d</Col>
       </Row>
+      <Modal
+        open={isOpen}
+        onCancel={() => setIsOpen(false)}
+        onOk={handleOk}
+        centered
+      >
+        <input type="file" onChange={onChange} />
+      </Modal>
     </PageContainer>
   );
 }
