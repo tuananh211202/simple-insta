@@ -5,8 +5,8 @@ import styled from "styled-components";
 import { FriendRequestApi, ImageApi, UserApi } from "../../midleware/api"; 
 import { useMutation, useQuery } from "react-query";
 import { Avatar, Button, Col, Form, Input, Modal, Row, message } from "antd";
-import { EditOutlined, SaveOutlined, UserOutlined, StopOutlined, PlusOutlined, MinusOutlined, CheckOutlined, CloseOutlined } from "@ant-design/icons";
-import { useEffect, useState } from "react";
+import { EditOutlined, SaveOutlined, UserOutlined, StopOutlined, PlusOutlined, MinusOutlined, CheckOutlined, CloseOutlined, FileImageOutlined } from "@ant-design/icons";
+import { useEffect, useRef, useState } from "react";
 import Cookies from "js-cookie";
 import LoadingPage from "../LoadingPage";
 import { socket } from "../../routes/user-routes";
@@ -99,13 +99,27 @@ const ProfilePage = () => {
   const [form] = Form.useForm();
   const currentUser = JSON.parse(Cookies.get('user') ?? '');
   const [isOpen, setIsOpen] = useState(false);
-  const [file, setfile] = useState<any>();
+  const [file, setFile] = useState<any>();
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [previewUrl, setPreviewUrl] = useState<string>('');
 
-  const onChange = (file: any) => {
-    const { files } = file.target;
-    if (files && files.length !== 0) {
-      setfile(files[0]);
-    }
+  const onChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const uploadFile = event.target.files && event.target.files[0];
+    if (uploadFile) {
+      const reader = new FileReader();
+
+      reader.onloadend = () => {
+        const image = new Image();
+        image.src = reader.result as string;
+
+        image.onload = () => {
+          setPreviewUrl(reader.result as string);
+          setFile(uploadFile);
+        }
+      }
+
+      reader.readAsDataURL(uploadFile);
+    } else setPreviewUrl('');
   };
 
   const { data: userData, refetch, isLoading } = useQuery(['userData', userId], () => UserApi.getUserById(userId));
@@ -116,6 +130,7 @@ const ProfilePage = () => {
     onSuccess: (data) => {
       console.log(data);
       updateDataMutation.mutate({avatar: data.path});
+      message.success('Update avatar successfully!');
     }
   });
 
@@ -136,10 +151,16 @@ const ProfilePage = () => {
     relationRefetch();
   }
 
+  const handleCancel = () => {
+    if (fileInputRef.current) fileInputRef.current.value = '';
+    setIsOpen(false);
+  }
+
   const handleOk = () => {
     const formData = new FormData();
     formData.append('image', file);
     uploadImageMutation.mutate(formData);
+    if (fileInputRef.current) fileInputRef.current.value = '';
     setIsOpen(false);
   }
 
@@ -223,11 +244,18 @@ const ProfilePage = () => {
       </Row>
       <Modal
         open={isOpen}
-        onCancel={() => setIsOpen(false)}
+        onCancel={handleCancel}
         onOk={handleOk}
         centered
+        closeIcon={false}
       >
-        <input type="file" onChange={onChange} />
+        <div style={{ width: '100%', aspectRatio: 1, marginBottom: '20px', borderRadius: '10%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          {previewUrl.length 
+            ? <Avatar src={previewUrl} shape="square" style={{ width: '100%', height: '100%' }} />
+            : <FileImageOutlined style={{ fontSize: '50px' }} />
+          }
+        </div>
+        <input ref={fileInputRef} type="file" accept="image/*" onChange={onChange} />
       </Modal>
     </PageContainer>
   );
