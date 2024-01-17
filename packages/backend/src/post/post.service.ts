@@ -1,7 +1,7 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { ModeType, Post } from './post.entity';
 import { InjectRepository } from '@nestjs/typeorm';
-import { In, MoreThan, MoreThanOrEqual, Repository } from 'typeorm';
+import { In, Repository } from 'typeorm';
 import { PostDto } from './dto/post.dto';
 import { UserService } from 'src/user/user.service';
 import { PaginationOptions } from 'src/utils/constants';
@@ -82,6 +82,13 @@ export class PostService {
       select: ['comments', 'reacts', 'owner'],
     });
 
-    return posts;
+    return posts.map((post) => ({
+      ...post,
+      owner: {
+        userId: post.owner.userId,
+        name: post.owner.name,
+        avatar: post.owner.avatar,
+      },
+    }));
   }
 }

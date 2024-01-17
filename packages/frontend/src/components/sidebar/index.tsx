@@ -1,6 +1,6 @@
-import { Menu, MenuProps } from "antd";
-import React, { useEffect, useState } from "react";
-import { MenuUnfoldOutlined, MenuFoldOutlined, HomeOutlined, SearchOutlined, MessageOutlined, HeartOutlined, PlusSquareOutlined, ProfileOutlined, LogoutOutlined, HeartFilled, MessageFilled } from "@ant-design/icons";
+import { Avatar, Input, Menu, MenuProps, Modal, Radio, RadioChangeEvent, Select, message } from "antd";
+import React, { useEffect, useRef, useState } from "react";
+import { MenuUnfoldOutlined, MenuFoldOutlined, HomeOutlined, SearchOutlined, MessageOutlined, HeartOutlined, PlusSquareOutlined, ProfileOutlined, LogoutOutlined, HeartFilled, MessageFilled, FileImageOutlined } from "@ant-design/icons";
 import { SideBarContainer } from "./style";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "../../context/auth-context";
@@ -8,7 +8,7 @@ import PageDrawner from "../drawner";
 import Cookies from 'js-cookie';
 import { socket } from "../../routes/user-routes";
 import { useMutation, useQuery } from "react-query";
-import { NotiApi } from "../../midleware/api";
+import { ImageApi, NotiApi, PostApi } from "../../midleware/api";
 
 type MenuItem = Required<MenuProps>['items'][number];
 
@@ -38,6 +38,12 @@ const SideBar = () => {
   const currentUser = JSON.parse(Cookies.get('user') ?? '');
   const [hasNoti, setHasNoti] = useState(false);
   const [hasMessage, setHasMessage] = useState(false);
+  const [isOpen, setIsOpen] = useState(false);
+  const [file, setFile] = useState<any>();
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [previewUrl, setPreviewUrl] = useState<string>('');
+  const [mode, setMode] = useState('normal');
+  const [description, setDescription] = useState('');
 
   const { data: unread } = useQuery(
    ['hasUnreadNoti', hasNoti],
@@ -53,7 +59,63 @@ const SideBar = () => {
     onSuccess: () => {
       setHasNoti(false);
     }
-  })
+  });
+
+  const uploadPostMutation = useMutation(PostApi.uploadPost);
+
+  const uploadImageMutation = useMutation(ImageApi.uploadImage, {
+    onSuccess: (data) => {
+      console.log(data);
+      uploadPostMutation.mutate({
+        imageUrl: data.path,
+        mode,
+        description
+      })
+    }
+  });
+
+  const onChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const uploadFile = event.target.files && event.target.files[0];
+    if (uploadFile) {
+      const reader = new FileReader();
+
+      reader.onloadend = () => {
+        const image = new Image();
+        image.src = reader.result as string;
+
+        image.onload = () => {
+          setPreviewUrl(reader.result as string);
+          setFile(uploadFile);
+        }
+      }
+
+      reader.readAsDataURL(uploadFile);
+    } else setPreviewUrl('');
+  };
+
+  const handleCancel = () => {
+    if (fileInputRef.current) fileInputRef.current.value = '';
+    setIsOpen(false);
+  }
+
+  const handleOk = () => {
+    if(!file || !description.length) message.error('Please fill out all fields completely!');
+    else {
+      const formData = new FormData();
+      formData.append('image', file);
+      uploadImageMutation.mutate(formData);
+      if (fileInputRef.current) fileInputRef.current.value = '';
+      setIsOpen(false);
+    }
+  }
+
+  const handleChange = (e: RadioChangeEvent) => {
+    setMode(e.target.value);
+  }
+
+  const handleInput = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    setDescription(e.target.value);
+  }
 
   const items: MenuItem[] = [
     getItem('Collapse', 'collapse', collapsed ? <MenuUnfoldOutlined /> : <MenuFoldOutlined />),
@@ -95,6 +157,7 @@ const SideBar = () => {
         setIsDrawnerOpen(true);
         return;
       case 'create':
+        setIsOpen(true);
         return;
       case 'logout':
         authDispatch({ type: 'LOGOUT' });
@@ -142,6 +205,27 @@ const SideBar = () => {
         theme="dark"
       />
       <PageDrawner isOpen={isDrawnerOpen} onClose={onDrawnerClose} drawnerType={selectedKey} />
+      <Modal
+        open={isOpen}
+        onCancel={handleCancel}
+        onOk={handleOk}
+        centered
+        closeIcon={false}
+      >
+        <div style={{ width: '100%', aspectRatio: 1, marginBottom: '20px', borderRadius: '10%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          {previewUrl.length 
+            ? <Avatar src={previewUrl} shape="square" style={{ width: '100%', height: '100%' }} />
+            : <FileImageOutlined style={{ fontSize: '50px' }} />
+          }
+        </div>
+        <input ref={fileInputRef} type="file" accept="image/*" onChange={onChange} />
+        <Radio.Group onChange={handleChange} value={mode} style={{ width: '100%', marginTop: '10px', display: 'flex', justifyContent: 'space-between' }}>
+          <Radio value='private'>Private</Radio>
+          <Radio value='normal'>Normal</Radio>
+          <Radio value='public'>Public</Radio>
+        </Radio.Group>
+        <Input.TextArea style={{ marginTop: '10px' }} value={description} onChange={handleInput} />
+      </Modal>
     </SideBarContainer>
   )
 }

@@ -7,6 +7,7 @@ import { useEffect } from 'react';
 import Cookies from 'js-cookie';
 import { BASE_URL } from '../midleware/api/constants';
 import { io } from 'socket.io-client';
+import HomePage from '../pages/Home';
 
 // eslint-disable-next-line react-refresh/only-export-components
 export const socket = io(BASE_URL);
@@ -38,7 +39,7 @@ const UserRoutes = () => {
       <SideBar />
       <Routes>
         <Route path="*" element={<Page404 />} />
-        <Route index path='/home' element={<a>asd</a>} />
+        <Route index path='/home' element={<HomePage />} />
         <Route path="/profile/:id" element={<ProfilePage />} />
       </Routes>
     </AppContainer>
