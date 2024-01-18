@@ -34,7 +34,7 @@ export class PostService {
     return;
   }
 
-  async getList(userId: number, pagOpts: PaginationOptions) {
+  async getList(userId: number, pagOpts: PaginationOptions, isOwner: number) {
     const user = await this.userService.findOne(userId);
     if (!user) {
       throw new NotFoundException();
@@ -46,12 +46,18 @@ export class PostService {
 
     const list = await this.postRepo.find({
       relations: ['comments', 'reacts'],
-      where: { owner: user },
+      where: {
+        owner: user,
+        mode: In(
+          [ModeType.PRIVATE, ModeType.NORMAL, ModeType.PUBLIC].slice(isOwner),
+        ),
+      },
       order: { create_at: 'DESC' },
       skip,
       take,
       select: ['comments', 'reacts'],
     });
+
     return list;
   }
 

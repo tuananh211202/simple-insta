@@ -2,7 +2,7 @@ import { useLocation } from "react-router-dom";
 import { numberValidator } from "../../utils/validator/number-validator";
 import Page404 from "../404";
 import styled from "styled-components";
-import { FriendRequestApi, ImageApi, UserApi } from "../../midleware/api"; 
+import { FriendRequestApi, ImageApi, PostApi, UserApi } from "../../midleware/api"; 
 import { useMutation, useQuery } from "react-query";
 import { Avatar, Button, Col, Form, Input, Modal, Row, message } from "antd";
 import { EditOutlined, SaveOutlined, UserOutlined, StopOutlined, PlusOutlined, MinusOutlined, CheckOutlined, CloseOutlined, FileImageOutlined } from "@ant-design/icons";
@@ -19,6 +19,16 @@ export enum Relation {
   sender = 'Sender',
   receiver = 'Receiver',
 }
+
+type PostType = {
+  postId: number;
+  create_at: string;
+  imageUrl: string;
+  description: string;
+  mode: string;
+  comment: {commentId: number}[];
+  reacts: {reactId: number}[];
+};
 
 const PageContainer = styled.div`
   width: 100%;
@@ -87,8 +97,32 @@ const PageContainer = styled.div`
       }
     }
   }
+  .friendsContainer {
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.2);
+    overflow-y: auto;
+    border-radius: 6px;
+    height: fit-content;
+    max-height: 50vh;
+  }
   .ant-form-item {
     margin-bottom: 5px;
+  }
+  .postsContainer {
+    padding: 10px;
+    height: 100%;
+    overflow-y: auto;
+  }
+  .postContainer {
+    width: 90%;
+    margin: 5px 5%;
+    border-radius: 5px;
+  }
+  .postContainer:hover {
+    cursor: pointer;
+    border: solid;
+    border-color: #2977ff;
+    border-width: 2px;
+    width: calc(90% - 4px);
   }
 `;
 
@@ -102,6 +136,7 @@ const ProfilePage = () => {
   const [file, setFile] = useState<any>();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [previewUrl, setPreviewUrl] = useState<string>('');
+  const [posts, setPosts] = useState<PostType[]>([]);
 
   const onChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const uploadFile = event.target.files && event.target.files[0];
@@ -140,6 +175,16 @@ const ProfilePage = () => {
     }
   });
 
+  const getListMutation = useMutation(PostApi.getList, {
+    onSuccess: (data, variables) => {
+      if(variables.page === 1) setPosts([...data]);
+      else setPosts([
+        ...posts,
+        ...data,
+      ]);
+    }
+  })
+
   const onSave = () => {
     updateDataMutation.mutate(form.getFieldsValue());
     message.success('Update profile successfully!');
@@ -177,6 +222,10 @@ const ProfilePage = () => {
       socket.off('receiveUserId');
     };
   }, []);
+
+  useEffect(() => {
+    getListMutation.mutate({ page: 1, pageSize: 20, userId });
+  }, [userId]);
   
   if(isLoading) return <LoadingPage />;
 
@@ -204,7 +253,7 @@ const ProfilePage = () => {
         </Row>
       </div>
       <Row className="contentContainer">
-        <Col span={17}>
+        <Col span={24}>
           <Row className="infoBox">
             <Col className="avatarContainer">
               <Avatar shape="square" size={200} icon={<UserOutlined />} src={!userData.avatar.length ? undefined : `${BASE_URL}/image/${userData.avatar}`} />
@@ -239,8 +288,41 @@ const ProfilePage = () => {
               </Form>
             </Col>
           </Row>
+          <Row
+            style={{
+              width: '100%',
+              height: 'calc(88vh - 200px)',
+            }}
+          >
+            <Col span={8} className="postsContainer">
+              {posts.filter((_post, index) => index % 3 === 0).map(post => (
+                  <img 
+                    src={!post.imageUrl.length ? undefined : `${BASE_URL}/image/${post.imageUrl}`} 
+                    className="postContainer"
+                  />
+                )
+              )}
+            </Col>
+            <Col span={8} className="postsContainer">
+              {posts.filter((_post, index) => index % 3 === 1).map(post => (
+                  <img 
+                    src={!post.imageUrl.length ? undefined : `${BASE_URL}/image/${post.imageUrl}`} 
+                    className="postContainer"
+                  />
+                )
+              )}
+            </Col>
+            <Col span={8} className="postsContainer">
+              {posts.filter((_post, index) => index % 3 === 2).map(post => (
+                  <img 
+                    src={!post.imageUrl.length ? undefined : `${BASE_URL}/image/${post.imageUrl}`} 
+                    className="postContainer"
+                  />
+                )
+              )}
+            </Col>
+          </Row>
         </Col>
-        <Col span={6} offset={1}>d</Col>
       </Row>
       <Modal
         open={isOpen}

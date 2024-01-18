@@ -2,6 +2,7 @@ import {
   Body,
   Controller,
   Get,
+  Param,
   ParseIntPipe,
   Post,
   Query,
@@ -19,13 +20,14 @@ export class PostController {
     return this.postService.createPost(req.user.sub, postDetail);
   }
 
-  @Get('list')
+  @Get('list/:userId')
   async getList(
     @Query('page', ParseIntPipe) page: number = 1,
     @Query('pageSize', ParseIntPipe) pageSize: number = 10,
-    @Request() req,
+    @Param('userId') userId: number,
+    @Query('isOwner', ParseIntPipe) isOwner = 1,
   ) {
-    return this.postService.getList(req.user.sub, { page, pageSize });
+    return this.postService.getList(userId, { page, pageSize }, isOwner);
   }
 
   @Get('posts')

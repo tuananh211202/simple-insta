@@ -4,8 +4,9 @@ import { PostApi } from "../../midleware/api";
 import { useEffect, useState } from "react";
 import InfiniteScroll from "react-infinite-scroll-component";
 import { Avatar, Card, Divider, List, Skeleton } from "antd";
-import { CommentOutlined, HeartOutlined, UserOutlined } from "@ant-design/icons";
+import { CommentOutlined, HeartFilled, HeartOutlined, UserOutlined } from "@ant-design/icons";
 import { BASE_URL } from "../../midleware/api/constants";
+import Cookies from "js-cookie";
 
 type PostType = {
   postId: number;
@@ -25,11 +26,14 @@ type PostType = {
 const HomePage = () => {
   const [page, setPage] = useState(1);
   const [posts, setPosts] = useState<PostType[]>([]);
+  const [change, setChange] = useState(0);
+  const currentUser = JSON.parse(Cookies.get('user') ?? '');
 
   const getPostsMutation = useMutation(PostApi.getPosts, {
     onSuccess: (data, variables) => {
       console.log(data, variables);
-      if (variables.page === 1) {
+      if (variables.page === 1) setPosts([...data])
+      else {
         setPosts([
           ...posts,
           ...data
@@ -38,14 +42,42 @@ const HomePage = () => {
     }
   });
 
+  const reactMutation = useMutation(PostApi.reactPost, {
+    onSuccess: () => {
+      setChange(change+1);
+    }
+  });
+
+  const unReactMutation = useMutation(PostApi.unReactPost, {
+    onSuccess: () => {
+      setChange(change+1);
+    }
+  })
+
   const handleGetMore = () => {
     getPostsMutation.mutate({ page: page + 1, pageSize: 10 });
     setPage(page + 1);
   }
 
+  const profileUserLink = (userId: number) => {
+    return '/profile/'+userId;
+  }
+
+  const handleReact = (postId: number) => {
+    reactMutation.mutate(postId);
+  }
+
+  const handleUnReact = (postId: number) => {
+    unReactMutation.mutate(postId);
+  }
+
   useEffect(() => {
     getPostsMutation.mutate({ page: 1, pageSize: 10 });
-  }, []);
+  }, [change]);
+
+  const ReactIcon = (hasReact: boolean, postId: number) => {
+    return hasReact ? <HeartFilled key='react' style={{ fontSize: '24px' }} onClick={() => handleUnReact(postId)} /> : <HeartOutlined key='react' style={{ fontSize: '24px' }} onClick={() => handleReact(postId)} />;
+  }
 
   return (
     <HomePageContainer>
@@ -68,25 +100,29 @@ const HomePage = () => {
           <List 
             dataSource={posts}
             split={false}
-            renderItem={(item) => (
-              <List.Item key={item.postId}>
+            renderItem={(item: PostType) => (
+              <List.Item key={item.postId} style={{ display: 'flex', justifyContent: 'center' }}>
                 <Card
-                  style={{ width: '100%' }}
+                  style={{ 
+                    width: '96%',
+                    boxShadow: '0 0 4px rgba(0, 0, 0, 0.5)',
+                    border: 'none',
+                  }}
                   cover={
                     <img
                       alt="example"
                       src={`${BASE_URL}/image/${item.imageUrl}`}
-                      style={{ width: '100%', aspectRatio: 1 }}
+                      style={{ width: '100%' }}
                     />
                   }
                   actions={[
-                    <HeartOutlined key='react' style={{ fontSize: '24px' }} />,
+                    ReactIcon(item.reacts.includes(currentUser.userId), item.postId),
                     <CommentOutlined key='comment' style={{ fontSize: '24px' }} />,
                   ]}
                 >
                   <Card.Meta 
                     avatar={<Avatar size={56} icon={<UserOutlined />} src={!item.owner.avatar.length ? undefined : `${BASE_URL}/image/${item.owner.avatar}`} />}
-                    title={item.owner.name}
+                    title={<a href={profileUserLink(+item.owner.userId)}>item.owner.name</a>}
                     description={item.description.length ? item.description : ' asdsa'}
                   />
                 </Card>

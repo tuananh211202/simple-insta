@@ -21,3 +21,8 @@ export const updateUser = async (userData: any) => {
     }
   });
 }
+
+export const getInfo = async (userId: number) => {
+  const response = await axios.get(`${BASE_URL}/user/info/${userId}`);
+  return response.data;
+}
