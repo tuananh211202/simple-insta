@@ -76,3 +76,9 @@ export const deleteCommentPost = async (commentId: number) => {
   })
   return response.data;
 }
+
+export const getPostDetails = async (postId: number) => {
+  if (postId === 0) return;
+  const response = await axios.get(`${BASE_URL}/post/full/${postId}`);
+  return response.data;
+}

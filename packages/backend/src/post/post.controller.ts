@@ -10,6 +10,7 @@ import {
 } from '@nestjs/common';
 import { PostService } from './post.service';
 import { PostDto } from './dto/post.dto';
+import { Public } from 'src/auth/constants';
 
 @Controller('post')
 export class PostController {
@@ -22,20 +23,20 @@ export class PostController {
 
   @Get('list/:userId')
   async getList(
-    @Query('page', ParseIntPipe) page: number = 1,
-    @Query('pageSize', ParseIntPipe) pageSize: number = 10,
     @Param('userId') userId: number,
     @Query('isOwner', ParseIntPipe) isOwner = 1,
   ) {
-    return this.postService.getList(userId, { page, pageSize }, isOwner);
+    return this.postService.getList(userId, isOwner);
   }
 
   @Get('posts')
-  async getPosts(
-    @Query('page', ParseIntPipe) page: number = 1,
-    @Query('pageSize', ParseIntPipe) pageSize: number = 10,
-    @Request() req,
-  ) {
-    return this.postService.getPosts(req.user.sub, { page, pageSize });
+  async getPosts(@Request() req) {
+    return this.postService.getPosts(req.user.sub);
+  }
+
+  @Public()
+  @Get('full/:postId')
+  async getPost(@Param('postId', ParseIntPipe) postId: number) {
+    return this.postService.getPost(postId);
   }
 }

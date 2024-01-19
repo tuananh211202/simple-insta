@@ -8,6 +8,7 @@ import Cookies from 'js-cookie';
 import { BASE_URL } from '../midleware/api/constants';
 import { io } from 'socket.io-client';
 import HomePage from '../pages/Home';
+import { PostModal } from '../components/modal/PostModal';
 
 // eslint-disable-next-line react-refresh/only-export-components
 export const socket = io(BASE_URL);
@@ -42,6 +43,7 @@ const UserRoutes = () => {
         <Route index path='/home' element={<HomePage />} />
         <Route path="/profile/:id" element={<ProfilePage />} />
       </Routes>
+      <PostModal />
     </AppContainer>
   );
 };

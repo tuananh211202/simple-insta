@@ -17,3 +17,7 @@ div::-webkit-scrollbar {
 div::-webkit-scrollbar-track {
   background-color: transparent;
 }
+
+a {
+  color: black;
+}

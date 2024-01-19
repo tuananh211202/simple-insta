@@ -34,18 +34,14 @@ export class PostService {
     return;
   }
 
-  async getList(userId: number, pagOpts: PaginationOptions, isOwner: number) {
+  async getList(userId: number, isOwner: number) {
     const user = await this.userService.findOne(userId);
     if (!user) {
       throw new NotFoundException();
     }
 
-    const { page, pageSize } = pagOpts;
-    const skip = (page - 1) * pageSize;
-    const take = pageSize;
-
     const list = await this.postRepo.find({
-      relations: ['comments', 'reacts'],
+      relations: ['comments', 'reacts', 'reacts.owner'],
       where: {
         owner: user,
         mode: In(
@@ -53,15 +49,16 @@ export class PostService {
         ),
       },
       order: { create_at: 'DESC' },
-      skip,
-      take,
       select: ['comments', 'reacts'],
     });
 
-    return list;
+    return list.map((post) => ({
+      ...post,
+      reacts: post.reacts.map((react) => react.owner.userId),
+    }));
   }
 
-  async getPosts(userId: number, pagOpts: PaginationOptions) {
+  async getPosts(userId: number) {
     const user = await this.userService.findOne(userId);
     if (!user) {
       throw new NotFoundException();
@@ -69,12 +66,8 @@ export class PostService {
 
     const listFriend = await this.friendRequestService.getListFriend(userId);
 
-    const { page, pageSize } = pagOpts;
-    const skip = (page - 1) * pageSize;
-    const take = pageSize;
-
     const posts = await this.postRepo.find({
-      relations: ['comments', 'reacts', 'owner'],
+      relations: ['comments', 'reacts', 'owner', 'reacts.owner'],
       where: [
         { mode: ModeType.PUBLIC },
         {
@@ -83,8 +76,6 @@ export class PostService {
         },
       ],
       order: { create_at: 'DESC' },
-      skip,
-      take,
       select: ['comments', 'reacts', 'owner'],
     });
 
@@ -95,6 +86,41 @@ export class PostService {
         name: post.owner.name,
         avatar: post.owner.avatar,
       },
+      reacts: post.reacts.map((react) => react.owner.userId),
     }));
+  }
+
+  async getPost(postId: number) {
+    const post = await this.postRepo.findOne({
+      relations: [
+        'comments',
+        'reacts',
+        'owner',
+        'reacts.owner',
+        'comments.owner',
+      ],
+      where: { postId },
+      select: ['comments', 'reacts', 'owner'],
+    });
+
+    return {
+      ...post,
+      reacts: post.reacts.map((react) => react.owner.userId),
+      comments: post.comments.map((comment) => {
+        return {
+          ...comment,
+          owner: {
+            userId: comment.owner.userId,
+            name: comment.owner.name,
+            avatar: comment.owner.avatar,
+          },
+        };
+      }),
+      owner: {
+        userId: post.owner.userId,
+        name: post.owner.name,
+        avatar: post.owner.avatar,
+      },
+    };
   }
 }

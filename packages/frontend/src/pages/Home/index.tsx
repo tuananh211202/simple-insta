@@ -7,6 +7,7 @@ import { Avatar, Card, Divider, List, Skeleton } from "antd";
 import { CommentOutlined, HeartFilled, HeartOutlined, UserOutlined } from "@ant-design/icons";
 import { BASE_URL } from "../../midleware/api/constants";
 import Cookies from "js-cookie";
+import { useModal } from "../../context/modal-context";
 
 type PostType = {
   postId: number;
@@ -28,6 +29,7 @@ const HomePage = () => {
   const [posts, setPosts] = useState<PostType[]>([]);
   const [change, setChange] = useState(0);
   const currentUser = JSON.parse(Cookies.get('user') ?? '');
+  const { dispatch } = useModal();
 
   const getPostsMutation = useMutation(PostApi.getPosts, {
     onSuccess: (data, variables) => {
@@ -79,6 +81,10 @@ const HomePage = () => {
     return hasReact ? <HeartFilled key='react' style={{ fontSize: '24px' }} onClick={() => handleUnReact(postId)} /> : <HeartOutlined key='react' style={{ fontSize: '24px' }} onClick={() => handleReact(postId)} />;
   }
 
+  const handleOpenPost = (postId: number) => {
+    dispatch({ type: 'OPEN_POST_MODAL', payload: { postId } });
+  }
+
   return (
     <HomePageContainer>
       <div
@@ -117,12 +123,12 @@ const HomePage = () => {
                   }
                   actions={[
                     ReactIcon(item.reacts.includes(currentUser.userId), item.postId),
-                    <CommentOutlined key='comment' style={{ fontSize: '24px' }} />,
+                    <CommentOutlined key='comment' onClick={() => handleOpenPost(item.postId)} style={{ fontSize: '24px' }} />,
                   ]}
                 >
                   <Card.Meta 
                     avatar={<Avatar size={56} icon={<UserOutlined />} src={!item.owner.avatar.length ? undefined : `${BASE_URL}/image/${item.owner.avatar}`} />}
-                    title={<a href={profileUserLink(+item.owner.userId)}>item.owner.name</a>}
+                    title={<a href={profileUserLink(+item.owner.userId)}>{item.owner.name}</a>}
                     description={item.description.length ? item.description : ' asdsa'}
                   />
                 </Card>
