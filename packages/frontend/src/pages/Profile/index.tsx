@@ -11,6 +11,7 @@ import Cookies from "js-cookie";
 import LoadingPage from "../LoadingPage";
 import { socket } from "../../routes/user-routes";
 import { BASE_URL } from "../../midleware/api/constants";
+import { useModal } from "../../context/modal-context";
 
 // eslint-disable-next-line react-refresh/only-export-components
 export enum Relation {
@@ -137,6 +138,7 @@ const ProfilePage = () => {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [previewUrl, setPreviewUrl] = useState<string>('');
   const [posts, setPosts] = useState<PostType[]>([]);
+  const { dispatch } = useModal();
 
   const onChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const uploadFile = event.target.files && event.target.files[0];
@@ -159,11 +161,26 @@ const ProfilePage = () => {
 
   const { data: userData, refetch, isLoading } = useQuery(['userData', userId], () => UserApi.getUserById(userId));
 
-  const { data: friendRequest, refetch: relationRefetch } = useQuery(['relation', userId], () => FriendRequestApi.getRelation(userId));
+  const { data: friendRequest, refetch: relationRefetch } = useQuery(
+    ['relation', userId], 
+    () => FriendRequestApi.getRelation(userId),
+  );
+
+  const getIcon = (rel: Relation) => {
+    if(rel === Relation.friend) return <MinusOutlined />;
+    if(rel === Relation.receiver) return <CheckOutlined />;
+    if(rel === Relation.sender) return <CloseOutlined />;
+    return <PlusOutlined />;
+  }
+
+  const actionRequestMutation = useMutation(FriendRequestApi.actionRequest, {
+    onSuccess: () => {
+      relationRefetch();
+    }
+  });
 
   const uploadImageMutation = useMutation(ImageApi.uploadImage, {
     onSuccess: (data) => {
-      console.log(data);
       updateDataMutation.mutate({avatar: data.path});
       message.success('Update avatar successfully!');
     }
@@ -192,8 +209,8 @@ const ProfilePage = () => {
   }
 
   const handleSendRequest = () => {
+    actionRequestMutation.mutate({ userId, current: friendRequest });
     socket.emit('sendUserId', userId);
-    relationRefetch();
   }
 
   const handleCancel = () => {
@@ -214,30 +231,12 @@ const ProfilePage = () => {
   }, [form, onEdit, userData]);
 
   useEffect(() => {
-    socket.on('receiveUserId', (receivedId) => {
-      console.log('Received Id from server:', receivedId);
-    });
-
-    return () => {
-      socket.off('receiveUserId');
-    };
-  }, []);
-
-  useEffect(() => {
     getListMutation.mutate({ page: 1, pageSize: 20, userId });
   }, [userId]);
   
   if(isLoading) return <LoadingPage />;
 
   if(!userData?.userId) return <Page404 />;
-
-  const getRelationIcon = () => {
-    if(friendRequest === Relation.none) return <PlusOutlined />;
-    if(friendRequest === Relation.friend) return <MinusOutlined />;
-    if(friendRequest === Relation.receiver) return <CheckOutlined />;
-    if(friendRequest === Relation.sender) return <CloseOutlined />;
-    return <></>;
-  }
 
   return (
     <PageContainer>
@@ -282,7 +281,7 @@ const ProfilePage = () => {
                         <Button icon={<SaveOutlined />} onClick={onSave} />
                       </>
                     ) : <Button icon={<EditOutlined />} onClick={() => setOnEdit(true)} />
-                    : <Button icon={getRelationIcon()} onClick={handleSendRequest} />
+                    : <Button onClick={handleSendRequest} icon={getIcon(friendRequest)} />
                   }
                 </div>
               </Form>
@@ -299,6 +298,7 @@ const ProfilePage = () => {
                   <img 
                     src={!post.imageUrl.length ? undefined : `${BASE_URL}/image/${post.imageUrl}`} 
                     className="postContainer"
+                    onClick={() => dispatch({ type: 'OPEN_POST_MODAL', payload: { postId: post.postId } })}
                   />
                 )
               )}
@@ -308,6 +308,7 @@ const ProfilePage = () => {
                   <img 
                     src={!post.imageUrl.length ? undefined : `${BASE_URL}/image/${post.imageUrl}`} 
                     className="postContainer"
+                    onClick={() => dispatch({ type: 'OPEN_POST_MODAL', payload: { postId: post.postId } })}
                   />
                 )
               )}
@@ -317,6 +318,7 @@ const ProfilePage = () => {
                   <img 
                     src={!post.imageUrl.length ? undefined : `${BASE_URL}/image/${post.imageUrl}`} 
                     className="postContainer"
+                    onClick={() => dispatch({ type: 'OPEN_POST_MODAL', payload: { postId: post.postId } })}
                   />
                 )
               )}

@@ -95,6 +95,8 @@ const SideBar = () => {
 
   const handleCancel = () => {
     if (fileInputRef.current) fileInputRef.current.value = '';
+    setPreviewUrl('');
+    setDescription('');
     setIsOpen(false);
   }
 
@@ -105,6 +107,8 @@ const SideBar = () => {
       formData.append('image', file);
       uploadImageMutation.mutate(formData);
       if (fileInputRef.current) fileInputRef.current.value = '';
+      setPreviewUrl('');
+      setDescription('');
       setIsOpen(false);
     }
   }

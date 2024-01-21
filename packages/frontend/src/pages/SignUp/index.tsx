@@ -24,7 +24,7 @@ const SignUp = () => {
         type: 'LOGIN',
         payload: {
           access_token: data.access_token,
-          user: data.user
+          user: data.newUser
         }
       });
       navigate('/home');

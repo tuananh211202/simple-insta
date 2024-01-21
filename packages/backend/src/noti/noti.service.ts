@@ -84,7 +84,6 @@ export class NotiService {
       receiverId,
     );
     if (relation === Relation.none) {
-      await this.friendRequestService.createFriendRequest(senderId, receiverId);
       await this.createNoti({
         content: `${sender.name} ${sender.userId} ` + NotiType.send,
         userId: receiver.userId,
@@ -92,7 +91,6 @@ export class NotiService {
       return { message: 'Send' };
     }
     if (relation === Relation.receiver) {
-      await this.friendRequestService.createFriendRequest(senderId, receiverId);
       await this.createNoti({
         content: `${sender.name} ${sender.userId} ` + NotiType.receive,
         userId: receiver.userId,
@@ -100,12 +98,9 @@ export class NotiService {
       return { message: 'Send' };
     }
     if (relation === Relation.sender) {
-      await this.friendRequestService.deleteFriendRequest(senderId, receiverId);
       return { message: 'Do nothing' };
     }
     if (relation === Relation.friend) {
-      await this.friendRequestService.deleteFriendRequest(senderId, receiverId);
-      await this.friendRequestService.deleteFriendRequest(receiverId, senderId);
       return { message: 'Do nothing' };
     }
     return { message: 'Do nothing' };

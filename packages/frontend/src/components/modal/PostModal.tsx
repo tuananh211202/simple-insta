@@ -1,18 +1,37 @@
 import { Avatar, Button, Card, Divider, Flex, Input, Modal, Space } from "antd";
 import { useModal } from "../../context/modal-context";
-import { useQuery } from "react-query";
+import { useMutation, useQuery } from "react-query";
 import { PostApi } from "../../midleware/api";
 import { BASE_URL } from "../../midleware/api/constants";
 import { CommentOutlined, HeartFilled, HeartOutlined, SendOutlined, UserOutlined } from "@ant-design/icons";
+import { useState } from "react";
+import Cookies from "js-cookie";
 
 export const PostModal = () => {
   const { state, dispatch } = useModal();
+  const [comment, setComment] = useState('');
+  const currentUser = JSON.parse(Cookies.get('user') ?? '');
 
   const handleCancel = () => {
     dispatch({ type: 'CLOSE_POST_MODAL' });
   }
 
-  const { data: post } = useQuery(['getPostDetails', state.postId],() => PostApi.getPostDetails(state.postId));
+  const { data: post, refetch } = useQuery(['getPostDetails', state.postId],() => PostApi.getPostDetails(state.postId));
+
+  const commentLPostMutation = useMutation(PostApi.commentPost, {
+    onSuccess: () => {
+      refetch();
+      setComment('');
+    }
+  });
+
+  const isReact = post?.reacts.includes(currentUser.userId);
+
+  const actionMutation = useMutation(!isReact ? () => PostApi.reactPost(post?.postId) : () => PostApi.unReactPost(post?.postId), {
+    onSuccess: () => {
+      refetch();
+    }
+  });
 
   const profileUserLink = (userId: number) => {
     return '/profile/'+userId;
@@ -32,7 +51,7 @@ export const PostModal = () => {
               <Flex style={{ marginBottom: '10px' }}>
                 <Avatar size={48} icon={<UserOutlined />} src={!post?.owner.avatar.length ? undefined : `${BASE_URL}/image/${post?.owner.avatar}`} />
                 <div style={{ marginLeft: '10px' }}>
-                  <a style={{ fontSize: '18px', lineHeight: 1 }} href={profileUserLink(+post?.owner.userId)}>{post?.owner.name}</a>
+                  <a style={{ fontSize: '18px', lineHeight: 1 }} href={profileUserLink(+post?.owner.userId)}>{post?.owner.name}{` #${post?.owner.userId}`}</a>
                   <p style={{ margin: 0, lineHeight: 1, marginTop: '10px', fontWeight: 300 }}>{post?.create_at.slice(0, 16).replace('T', ' ')}</p>
                 </div>
               </Flex>
@@ -58,18 +77,18 @@ export const PostModal = () => {
               {post?.comments.map((comment) => (<>
                 <Flex align="center">
                   <Avatar icon={<UserOutlined />} src={!comment.owner.avatar.length ? undefined : `${BASE_URL}/image/${comment.owner.avatar}`} />
-                  <a style={{ fontSize: '16px', lineHeight: 1, marginLeft: '5px' }} href={profileUserLink(+comment.owner.userId)}>{comment.owner.name}</a>
+                  <a style={{ fontSize: '16px', lineHeight: 1, marginLeft: '5px' }} href={profileUserLink(+comment.owner.userId)}>{comment.owner.name}{` #${comment.owner.userId}`}</a>
                 </Flex>
-                <div style={{ marginLeft: '37px', width: '85%', padding: '8px 16px', backgroundColor: '#f0f0f0', borderRadius: '10px' }}>
+                <div style={{ marginLeft: '37px', width: '85%', padding: '8px 16px', backgroundColor: '#f0f0f0', borderRadius: '10px', marginBottom: '5px' }}>
                   {comment.content}
                 </div>
               </>))}
             </div>
             <div style={{ width: '100%', position: 'absolute', bottom: 0, height: '50px', display: 'flex', alignItems: 'center', backgroundColor: 'wihte' }}>
               <Space.Compact style={{ width: 'calc(100% - 16px)' }}>
-                <Input />
-                <Button icon={<SendOutlined />}></Button>
-                <Button icon={<HeartOutlined />}></Button>
+                <Input value={comment} onChange={(e) => setComment(e.target.value)} />
+                <Button icon={<SendOutlined />} onClick={() => commentLPostMutation.mutate({ postId: post.postId, content: comment})}/>
+                <Button icon={!isReact ? <HeartOutlined /> : <HeartFilled />} onClick={() => actionMutation.mutate()}/>
               </Space.Compact>
             </div>
           </div>
