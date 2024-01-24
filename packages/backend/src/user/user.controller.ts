@@ -38,4 +38,12 @@ export class UserController {
   updateUser(@Request() req, @Body() userData: UserDto) {
     return this.userService.updateUser({ userId: req.user.sub, ...userData });
   }
+
+  @Post('updatePassword')
+  updatePassword(
+    @Request() req,
+    @Body() updateData: { oldPassword: string; newPassword: string },
+  ) {
+    return this.userService.updatePassword(req.user.sub, updateData);
+  }
 }

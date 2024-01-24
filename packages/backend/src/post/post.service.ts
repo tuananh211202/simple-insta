@@ -54,7 +54,13 @@ export class PostService {
 
     return list.map((post) => ({
       ...post,
-      reacts: post.reacts.map((react) => react.owner.userId),
+      reactCount: post.reacts.length,
+      commentCount: post.comments.length,
+      owner: {
+        avatar: user.avatar,
+        name: user.name,
+        userId: user.userId,
+      },
     }));
   }
 
@@ -86,7 +92,8 @@ export class PostService {
         name: post.owner.name,
         avatar: post.owner.avatar,
       },
-      reacts: post.reacts.map((react) => react.owner.userId),
+      reactCount: post.reacts.length,
+      commentCount: post.comments.length,
     }));
   }
 

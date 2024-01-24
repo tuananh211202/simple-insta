@@ -15,18 +15,34 @@ export class FriendRequestController {
 
   @Public()
   @Post('add/:senderId/:receiverId')
-  createFriendRequest(@Param('senderId') senderId: number, @Param('receiverId') receiverId: number) {
+  createFriendRequest(
+    @Param('senderId') senderId: number,
+    @Param('receiverId') receiverId: number,
+  ) {
     return this.friendRequestService.createFriendRequest(senderId, receiverId);
   }
 
   @Public()
   @Post('remove/:senderId/:receiverId')
-  deleteFriendRequest(@Param('senderId') senderId: number, @Param('receiverId') receiverId: number) {
+  deleteFriendRequest(
+    @Param('senderId') senderId: number,
+    @Param('receiverId') receiverId: number,
+  ) {
     return this.friendRequestService.deleteFriendRequest(senderId, receiverId);
   }
 
   @Get('list-friend')
   getlistFriend(@Request() req) {
     return this.friendRequestService.getListFriend(req.user.sub);
+  }
+
+  @Get('request')
+  getRequest(@Request() req) {
+    return this.friendRequestService.getListRequest(req.user.sub);
+  }
+
+  @Get('receiver')
+  getReceiver(@Request() req) {
+    return this.friendRequestService.getReceiverRequests(req.user.sub);
   }
 }
