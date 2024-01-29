@@ -36,6 +36,11 @@ export class FriendRequestController {
     return this.friendRequestService.getListFriend(req.user.sub);
   }
 
+  @Get('list-friend-and-unread')
+  getlistFriendAndUnread(@Request() req) {
+    return this.friendRequestService.getListFriendAndUnreadMessage(req.user.sub);
+  }
+
   @Get('request')
   getRequest(@Request() req) {
     return this.friendRequestService.getListRequest(req.user.sub);

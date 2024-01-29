@@ -3,6 +3,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { FriendRequest } from './friend-request.entity';
 import { Repository } from 'typeorm';
 import { UserService } from 'src/user/user.service';
+import { MessageService } from 'src/message/message.service';
 
 export enum Relation {
   none = 'None',
@@ -17,13 +18,12 @@ export class FriendRequestService {
     @InjectRepository(FriendRequest)
     private requestRepo: Repository<FriendRequest>,
     private userService: UserService,
+    private messageService: MessageService,
   ) {}
 
   async getRelation(userId: number, otherId: number) {
     const user = await this.userService.findOne(userId);
     const other = await this.userService.findOne(otherId);
-
-    console.log(userId, otherId);
 
     if (!user || !other) {
       throw new ConflictException();
@@ -122,6 +122,53 @@ export class FriendRequestService {
     }, []);
 
     return listFriend;
+  }
+
+  async getListFriendAndUnreadMessage(userId: number) {
+    const user = await this.userService.findOne(userId);
+
+    if (!user) {
+      throw new NotFoundException();
+    }
+
+    const sentRequests = await this.requestRepo.find({
+      relations: ['receiver'],
+      select: ['receiver'],
+      where: {
+        sender: user,
+      },
+    });
+
+    const receivedRequests = await this.requestRepo.find({
+      relations: ['sender'],
+      select: ['sender'],
+      where: {
+        receiver: user,
+      },
+    });
+
+    const listFriend = sentRequests.reduce((result, sentRequest) => {
+      if (
+        receivedRequests.findIndex(
+          (receivedRequest) =>
+            receivedRequest.sender.userId === sentRequest.receiver.userId,
+        ) !== -1
+      ) {
+        return [
+          ...result,
+          {
+            userId: sentRequest.receiver.userId,
+            name: sentRequest.receiver.name,
+            avatar: sentRequest.receiver.avatar,
+          },
+        ];
+      }
+      return result;
+    }, []);
+
+    const res = await this.messageService.getUnreadMessage(userId);
+
+    return res;
   }
 
   async getListRequest(userId: number) {

@@ -4,7 +4,10 @@ import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { IoAdapter } from '@nestjs/platform-socket.io';
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule, { cors: true });
+  const app = await NestFactory.create(AppModule);
+  // thêm cấu hình cors
+  app.enableCors();
+
   app.useWebSocketAdapter(new IoAdapter(app));
 
   const config = new DocumentBuilder()

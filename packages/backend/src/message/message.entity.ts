@@ -9,6 +9,9 @@ export class Message {
   @Column()
   message: string;
 
+  @Column({ default: false })
+  isRead: boolean;
+
   @Column({ type: 'timestamp' })
   create_at: Date;
 

@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException, UnauthorizedException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Message } from './message.entity';
 import { Repository } from 'typeorm';
@@ -54,5 +54,23 @@ export class MessageService {
         },
       };
     });
+  }
+
+  async getUnreadMessage(userId: number) {
+    const user = await this.userService.findOne(userId);
+    if(!user) {
+      throw new UnauthorizedException();
+    }
+
+    const chats = await this.messageRepo.find({
+      relations: ['sender', 'receiver'],
+      where: [
+        {sender: user},
+        {receiver: user}
+      ],
+      select: ['sender', 'receiver'],
+    });
+
+    return chats;
   }
 }
